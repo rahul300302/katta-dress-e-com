@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Instagram, Facebook, MapPin, Mail, Phone } from 'lucide-react';
+import { Instagram, MapPin, Mail, Phone, MessageCircle } from 'lucide-react';
 import { BRAND } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 
@@ -54,19 +54,61 @@ export default function Footer() {
         <div>
           <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider">Contact</h4>
           <ul className="space-y-3 text-sm text-store-muted">
-            <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4" /> {BRAND.phone}
+            <li>
+              <a
+                href={BRAND.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 transition hover:text-store-text"
+              >
+                <MessageCircle className="h-4 w-4 shrink-0" />
+                WhatsApp {BRAND.phone}
+              </a>
             </li>
-            <li className="flex items-center gap-2">
-              <Mail className="h-4 w-4" /> {BRAND.email}
+            <li>
+              <a
+                href={`tel:${BRAND.phone.replace(/\s/g, '')}`}
+                className="flex items-center gap-2 transition hover:text-store-text"
+              >
+                <Phone className="h-4 w-4 shrink-0" />
+                {BRAND.phone}
+              </a>
+            </li>
+            <li>
+              <a
+                href={`mailto:${BRAND.email}`}
+                className="flex items-center gap-2 transition hover:text-store-text"
+              >
+                <Mail className="h-4 w-4 shrink-0" />
+                {BRAND.email}
+              </a>
             </li>
           </ul>
           <div className="mt-6 flex gap-4">
-            <a href="#" className="rounded-full border border-store-border p-2 transition hover:border-store-text">
+            <a
+              href={BRAND.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="KATTA on Instagram"
+              className="rounded-full border border-store-border p-2 transition hover:border-store-text hover:bg-white"
+            >
               <Instagram className="h-4 w-4" />
             </a>
-            <a href="#" className="rounded-full border border-store-border p-2 transition hover:border-store-text">
-              <Facebook className="h-4 w-4" />
+            <a
+              href={BRAND.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat on WhatsApp"
+              className="rounded-full border border-store-border p-2 transition hover:border-store-text hover:bg-white"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </a>
+            <a
+              href={`mailto:${BRAND.email}`}
+              aria-label="Email KATTA"
+              className="rounded-full border border-store-border p-2 transition hover:border-store-text hover:bg-white"
+            >
+              <Mail className="h-4 w-4" />
             </a>
           </div>
         </div>
