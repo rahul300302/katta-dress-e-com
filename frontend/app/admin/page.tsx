@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Package, ShoppingCart, Users, IndianRupee, Plus } from 'lucide-react';
+import Image from 'next/image';
+import { Package, ShoppingCart, Users, IndianRupee, Plus, Eye, Pencil } from 'lucide-react';
 import api, { type Product, type Order, type AppUser } from '@/services/api';
 import { formatPrice } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 import ImageUploader from '@/components/admin/ImageUploader';
 import SizeStockEditor from '@/components/admin/SizeStockEditor';
+import AdminProductModal, { type ProductFormData } from '@/components/admin/AdminProductModal';
 import type { SizeStockMap } from '@/lib/productStock';
 import { useAuthStore } from '@/store/authStore';
 import { getGoogleAuthUrl } from '@/lib/auth';
@@ -25,6 +27,8 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
   const [tab, setTab] = useState<Tab>('products');
+  const [modalProduct, setModalProduct] = useState<Product | null>(null);
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -99,6 +103,32 @@ export default function AdminPage() {
     if (!confirm('Delete this product?')) return;
     await api.delete(`/products/${id}`);
     setProducts((p) => p.filter((x) => x._id !== id));
+    if (modalProduct?._id === id) setModalProduct(null);
+  }
+
+  function openProductModal(product: Product, mode: 'view' | 'edit') {
+    setModalProduct(product);
+    setModalMode(mode);
+  }
+
+  async function handleUpdateProduct(id: string, form: ProductFormData) {
+    const res = await api.patch(`/products/${id}`, {
+      name: form.name,
+      description: form.description,
+      price: Number(form.price),
+      offerPrice: form.offerPrice ? Number(form.offerPrice) : undefined,
+      sizeStock: form.sizeStock,
+      collection: form.collection,
+      colors: form.colors,
+      images: form.images,
+      isHotSale: form.isHotSale,
+      isOffer: form.isOffer,
+      isNewArrival: form.isNewArrival,
+      isBestSeller: form.isBestSeller,
+    });
+    const updated = res.data.data as Product;
+    setProducts((list) => list.map((p) => (p._id === id ? updated : p)));
+    setModalProduct(updated);
   }
 
   async function updateOrderStatus(id: string, orderStatus: string) {
@@ -251,10 +281,25 @@ export default function AdminPage() {
           </form>
 
           <div className="space-y-3">
+            <h2 className="font-semibold text-store-muted">All Products ({products.length})</h2>
             {products.map((p) => (
-              <div key={p._id} className="flex items-center justify-between rounded-xl border border-store-border p-4">
-                <div>
-                  <p className="font-semibold">{p.name}</p>
+              <div key={p._id} className="flex items-center gap-4 rounded-xl border border-store-border p-4">
+                <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-store-faint">
+                  {p.images?.[0] ? (
+                    <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="56px" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[10px] text-store-muted">
+                      No img
+                    </div>
+                  )}
+                  {p.images.length > 1 && (
+                    <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 text-[9px] text-white">
+                      +{p.images.length - 1}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{p.name}</p>
                   <p className="text-sm text-store-muted">
                     {formatPrice(p.offerPrice || p.price)} ·{' '}
                     {Object.entries(p.sizeStock || {})
@@ -262,9 +307,31 @@ export default function AdminPage() {
                       .join(' · ') || `Stock ${p.stock}`}
                   </p>
                 </div>
-                <button type="button" onClick={() => deleteProduct(p._id)} className="text-sm text-red-600 hover:underline">
-                  Delete
-                </button>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openProductModal(p, 'view')}
+                    className="btn-secondary !px-3 !py-1.5 text-xs"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openProductModal(p, 'edit')}
+                    className="btn-secondary !px-3 !py-1.5 text-xs"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteProduct(p._id)}
+                    className="text-xs text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -365,6 +432,13 @@ export default function AdminPage() {
           )}
         </div>
       )}
+      <AdminProductModal
+        product={modalProduct}
+        mode={modalMode}
+        open={!!modalProduct}
+        onClose={() => setModalProduct(null)}
+        onSave={handleUpdateProduct}
+      />
     </div>
   );
 }

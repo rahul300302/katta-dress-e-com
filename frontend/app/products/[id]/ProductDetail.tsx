@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
@@ -11,6 +10,7 @@ import { normalizeProduct, stockForSize } from '@/lib/productStock';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import api from '@/services/api';
 import ProductCard from '@/components/ProductCard';
+import ProductImageGallery from '@/components/ProductImageGallery';
 
 interface Props {
   product: Product;
@@ -24,7 +24,6 @@ export default function ProductDetail({ product, related }: Props) {
   const p = useMemo(() => normalizeProduct(product), [product]);
   const offeredSizes = p.sizes;
 
-  const [selectedImage, setSelectedImage] = useState(0);
   const [size, setSize] = useState<Size | ''>('');
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -69,47 +68,27 @@ export default function ProductDetail({ product, related }: Props) {
   }
 
   return (
-    <div className="container-main py-10 md:py-14">
+    <motion.div className="container-main py-10 md:py-14">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="grid gap-10 lg:grid-cols-2"
       >
-        <div>
-          <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint">
-            {size && selectedStock <= 0 && (
+        <ProductImageGallery
+          images={p.images}
+          alt={p.name}
+          priority
+          imageClassName={size && selectedStock <= 0 ? 'opacity-60 grayscale' : ''}
+          overlay={
+            size && selectedStock <= 0 ? (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
                 <span className="rounded-full bg-white px-5 py-2 text-sm font-bold uppercase tracking-wider">
                   No stock — {size}
                 </span>
               </div>
-            )}
-            <Image
-              src={p.images[selectedImage] || p.images[0]}
-              alt={p.name}
-              fill
-              className={`object-cover ${size && selectedStock <= 0 ? 'opacity-60 grayscale' : ''}`}
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
-          {p.images.length > 1 && (
-            <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-              {p.images.map((img, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setSelectedImage(i)}
-                  className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border-2 ${
-                    i === selectedImage ? 'border-store-text' : 'border-store-border'
-                  }`}
-                >
-                  <Image src={img} alt="" fill className="object-cover" sizes="64px" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            ) : undefined
+          }
+        />
 
         <div>
           <p className="text-xs uppercase tracking-wider text-store-muted">{p.collection}</p>
@@ -231,6 +210,6 @@ export default function ProductDetail({ product, related }: Props) {
           </div>
         </section>
       )}
-    </div>
+    </motion.div>
   );
 }
