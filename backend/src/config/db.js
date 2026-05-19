@@ -1,8 +1,10 @@
-import pg from 'pg';
+import { createRequire } from 'node:module';
 import { Sequelize } from 'sequelize';
 import env from './env.js';
 
-// Vercel/serverless bundlers drop optional deps unless imported explicitly.
+const require = createRequire(import.meta.url);
+const pg = require('./pgDriver.cjs');
+
 export const sequelize = new Sequelize(
   env.db.name,
   env.db.user,
