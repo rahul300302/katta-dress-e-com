@@ -1,20 +1,32 @@
 import app from './app.js';
-import env from './config/env.js';
 import { connectDB } from './config/db.js';
 import { syncDatabase } from './models/index.js';
-import { seedProducts } from './scripts/seed.js';
+// import { seedProducts } from './scripts/seed.js';
 
-async function start() {
+let initialized = false;
+
+async function initServer() {
+  if (initialized) return;
+
   await connectDB();
   await syncDatabase();
-  await seedProducts();
 
-  app.listen(env.port, () => {
-    console.log(`KATTA API running on port ${env.port}`);
-  });
+  // Do not run seedProducts in Vercel every request
+  // await seedProducts();
+
+  initialized = true;
 }
 
-start().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+export default async function handler(req, res) {
+  try {
+    await initServer();
+    return app(req, res);
+  } catch (err) {
+    console.error('Vercel server error:', err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Internal Server Error',
+    });
+  }
+}
