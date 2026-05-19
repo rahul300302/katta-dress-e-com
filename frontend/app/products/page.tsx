@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
 import api, { type Product } from '@/services/api';
 import ProductCard from '@/components/ProductCard';
 import { SIZES } from '@/lib/constants';
@@ -10,11 +9,8 @@ import { SIZES } from '@/lib/constants';
 const COLORS = ['Black', 'White', 'Navy', 'Grey', 'Olive', 'Orange'];
 const COLLECTIONS = ['Essentials', 'Street', 'Urban'];
 
-function ProductsContent() {
-  const searchParams = useSearchParams();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
+function readFiltersFromParams(searchParams: URLSearchParams) {
+  return {
     size: searchParams.get('size') || '',
     color: searchParams.get('color') || '',
     collection: searchParams.get('collection') || '',
@@ -25,12 +21,43 @@ function ProductsContent() {
     isHotSale: searchParams.get('isHotSale') || '',
     isOffer: searchParams.get('isOffer') || '',
     isNewArrival: searchParams.get('isNewArrival') || '',
-  });
+    isBestSeller: searchParams.get('isBestSeller') || '',
+  };
+}
+
+function getPageHeading(filters: ReturnType<typeof readFiltersFromParams>) {
+  if (filters.isHotSale === 'true') return { title: 'Hot Sales', subtitle: 'Trending tees at unbeatable prices' };
+  if (filters.isNewArrival === 'true') return { title: 'New Arrivals', subtitle: 'Fresh drops just landed' };
+  if (filters.isOffer === 'true') return { title: 'Special Offers', subtitle: 'Limited-time deals' };
+  if (filters.isBestSeller === 'true') return { title: 'Best Sellers', subtitle: 'Customer favourites' };
+  if (filters.q) return { title: `Search: ${filters.q}`, subtitle: 'Results for your search' };
+  return { title: "Shop Men's T-Shirts", subtitle: 'Premium streetwear by KATTA' };
+}
+
+function ProductsContent() {
+  const searchParams = useSearchParams();
+  const paramsKey = searchParams.toString();
+
+  const urlFilters = useMemo(() => readFiltersFromParams(searchParams), [paramsKey, searchParams]);
+
+  const [filters, setFilters] = useState(urlFilters);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Keep filters in sync when header/footer links change the URL
+  useEffect(() => {
+    setFilters(urlFilters);
+  }, [urlFilters]);
 
   useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => v && params.set(k, v));
+
+    const hasSectionFilter =
+      filters.isHotSale || filters.isNewArrival || filters.isOffer || filters.isBestSeller;
+    if (hasSectionFilter) params.set('limit', '48');
+
     api
       .get(`/products?${params}`)
       .then((res) => setProducts(res.data.data.products))
@@ -38,12 +65,14 @@ function ProductsContent() {
       .finally(() => setLoading(false));
   }, [filters]);
 
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container-main py-10 md:py-14">
-      <h1 className="section-title">Shop Men&apos;s T-Shirts</h1>
-      <p className="mt-2 text-store-muted">Premium streetwear by KATTA</p>
+  const { title, subtitle } = getPageHeading(filters);
 
-      <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 300 }} className="mt-10 grid gap-8 lg:grid-cols-[240px_1fr]">
+  return (
+    <div className="container-main py-10 md:py-14">
+      <h1 className="section-title">{title}</h1>
+      <p className="mt-2 text-store-muted">{subtitle}</p>
+
+      <div className="mt-10 grid gap-8 lg:grid-cols-[240px_1fr]">
         <aside className="space-y-6 rounded-2xl border border-store-border bg-store-faint p-6">
           <div>
             <label className="text-xs font-semibold uppercase">Sort</label>
@@ -66,7 +95,9 @@ function ProductsContent() {
             >
               <option value="">All sizes</option>
               {SIZES.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
             {filters.size && (
@@ -84,7 +115,9 @@ function ProductsContent() {
             >
               <option value="">All</option>
               {COLORS.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
@@ -97,7 +130,9 @@ function ProductsContent() {
             >
               <option value="">All</option>
               {COLLECTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
@@ -121,15 +156,11 @@ function ProductsContent() {
 
         <div>
           {loading ? (
-            <motion.div
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="grid grid-cols-2 gap-4 lg:grid-cols-3"
-            >
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-store-border" />
               ))}
-            </motion.div>
+            </div>
           ) : products.length === 0 ? (
             <p className="py-20 text-center text-store-muted">No products found.</p>
           ) : (
@@ -140,8 +171,8 @@ function ProductsContent() {
             </div>
           )}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -149,7 +180,9 @@ export default function ProductsPage() {
   return (
     <Suspense
       fallback={
-        <div className="container-main py-20 text-center animate-pulse text-store-muted">Loading...</div>
+        <div className="container-main animate-pulse py-20 text-center text-store-muted">
+          Loading...
+        </div>
       }
     >
       <ProductsContent />

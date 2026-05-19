@@ -3,11 +3,25 @@ import ViewTshirtsCTA from '@/components/ViewTshirtsCTA';
 import ProductSection from '@/components/ProductSection';
 import StoreLocation from '@/components/StoreLocation';
 import TrustPaymentBar from '@/components/TrustPaymentBar';
-import api, { type Product } from '@/services/api';
+import serverApi from '@/services/serverApi';
+import type { Product } from '@/services/api';
+import { DEFAULT_HERO_SLIDES, type HeroSlide } from '@/lib/heroSlides';
+
+async function getHeroSlides(): Promise<HeroSlide[]> {
+  try {
+    const res = await serverApi.get('/site/hero');
+    if (res.data.success && Array.isArray(res.data.data) && res.data.data.length) {
+      return res.data.data;
+    }
+  } catch {
+    /* use defaults */
+  }
+  return DEFAULT_HERO_SLIDES;
+}
 
 async function getHomeData() {
   try {
-    const res = await api.get('/products/home');
+    const res = await serverApi.get('/products/home');
     return res.data.data as {
       hotSales: Product[];
       offers: Product[];
@@ -27,11 +41,11 @@ async function getHomeData() {
 }
 
 export default async function HomePage() {
-  const data = await getHomeData();
+  const [data, heroSlides] = await Promise.all([getHomeData(), getHeroSlides()]);
 
   return (
     <>
-      <HeroCarousel />
+      <HeroCarousel slides={heroSlides} />
       <ViewTshirtsCTA products={data.collection} />
       <TrustPaymentBar />
       <ProductSection

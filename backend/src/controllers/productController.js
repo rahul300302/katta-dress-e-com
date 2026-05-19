@@ -9,14 +9,18 @@ import {
   stockForSize,
 } from '../utils/productStock.js';
 
+function isTruthyQuery(value) {
+  return value === true || value === 'true' || value === '1' || value === 1;
+}
+
 function buildWhere(query) {
   const where = {};
   if (query.collection) where.collection = { [Op.iLike]: `%${query.collection}%` };
   if (query.category) where.category = { [Op.iLike]: `%${query.category}%` };
-  if (query.isHotSale === 'true') where.isHotSale = true;
-  if (query.isOffer === 'true') where.isOffer = true;
-  if (query.isNewArrival === 'true') where.isNewArrival = true;
-  if (query.isBestSeller === 'true') where.isBestSeller = true;
+  if (isTruthyQuery(query.isHotSale)) where.isHotSale = true;
+  if (isTruthyQuery(query.isOffer)) where.isOffer = true;
+  if (isTruthyQuery(query.isNewArrival)) where.isNewArrival = true;
+  if (isTruthyQuery(query.isBestSeller)) where.isBestSeller = true;
   if (query.q) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${query.q}%` } },
@@ -51,6 +55,10 @@ function parseProductBody(body) {
     stock,
     images: body.images || [],
     colors: body.colors || [],
+    isHotSale: Boolean(body.isHotSale),
+    isOffer: Boolean(body.isOffer),
+    isNewArrival: Boolean(body.isNewArrival),
+    isBestSeller: Boolean(body.isBestSeller),
   };
 }
 
@@ -137,6 +145,7 @@ export async function updateProduct(req, res, next) {
     const product = await Product.findByPk(req.params.id);
     if (!product) throw new AppError('Product not found', 404);
     await product.update(parseProductBody({ ...product.toJSON(), ...req.body }));
+    await product.reload();
     res.json({ success: true, message: 'Product updated', data: numericFields(product) });
   } catch (err) {
     next(err);

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Package, ShoppingCart, Users, IndianRupee, Plus, Eye, Pencil } from 'lucide-react';
+import HeroSlideEditor from '@/components/admin/HeroSlideEditor';
 import api, { type Product, type Order, type AppUser } from '@/services/api';
 import { formatPrice } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
@@ -16,7 +17,7 @@ import type { SizeStockMap } from '@/lib/productStock';
 import { useAuthStore } from '@/store/authStore';
 import { getGoogleAuthUrl } from '@/lib/auth';
 
-type Tab = 'products' | 'orders' | 'users';
+type Tab = 'products' | 'hero' | 'orders' | 'users';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -169,6 +170,7 @@ export default function AdminPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'products', label: 'Products' },
+    { id: 'hero', label: 'Hero Carousel' },
     { id: 'orders', label: 'Orders' },
     { id: 'users', label: 'Users' },
   ];
@@ -215,6 +217,8 @@ export default function AdminPage() {
           </button>
         ))}
       </div>
+
+      {tab === 'hero' && <HeroSlideEditor />}
 
       {tab === 'products' && (
         <div className="mt-8 grid gap-10 lg:grid-cols-2">

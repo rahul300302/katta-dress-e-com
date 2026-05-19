@@ -84,6 +84,16 @@ const Order = sequelize.define(
   { tableName: 'orders', timestamps: true }
 );
 
+const SiteSetting = sequelize.define(
+  'SiteSetting',
+  {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    key: { type: DataTypes.STRING, allowNull: false, unique: true },
+    value: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+  },
+  { tableName: 'site_settings', timestamps: true }
+);
+
 const OrderItem = sequelize.define(
   'OrderItem',
   {
@@ -110,7 +120,7 @@ Order.belongsTo(User, { foreignKey: 'userId' });
 Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'items', onDelete: 'CASCADE' });
 OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 
-export { User, Product, Cart, CartItem, Order, OrderItem, sequelize };
+export { User, Product, Cart, CartItem, Order, OrderItem, SiteSetting, sequelize };
 
 export async function syncDatabase() {
   // Skip schema sync on Vercel — cold starts would run ALTER on every instance.

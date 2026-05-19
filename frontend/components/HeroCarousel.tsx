@@ -6,51 +6,55 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import { DEFAULT_HERO_SLIDES, type HeroSlide } from '@/lib/heroSlides';
+import api from '@/services/api';
 
-const slides = [
-  {
-    title: 'Streetwear Essentials',
-    subtitle: 'Premium men\'s tees crafted for everyday style',
-    cta: 'Shop Collection',
-    href: '/products',
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1600&q=80',
-  },
-  {
-    title: 'Hot Sales — Up to 30% Off',
-    subtitle: 'Limited time offers on bestsellers',
-    cta: 'View Offers',
-    href: '/products?isHotSale=true',
-    image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=1600&q=80',
-  },
-  {
-    title: 'New Arrivals',
-    subtitle: 'Fresh drops every week',
-    cta: 'Explore New',
-    href: '/products?isNewArrival=true',
-    image: 'https://images.unsplash.com/photo-1622445275463-afa6ab5c4ecc?w=1600&q=80',
-  },
-];
+interface Props {
+  slides?: HeroSlide[];
+}
 
-export default function HeroCarousel() {
+export default function HeroCarousel({ slides: initialSlides }: Props) {
+  const [slides, setSlides] = useState<HeroSlide[]>(
+    initialSlides?.length ? initialSlides : DEFAULT_HERO_SLIDES
+  );
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    if (initialSlides?.length) {
+      setSlides(initialSlides);
+      return;
+    }
+    api
+      .get('/site/hero')
+      .then((res) => {
+        if (res.data.success && Array.isArray(res.data.data) && res.data.data.length) {
+          setSlides(res.data.data);
+        }
+      })
+      .catch(() => setSlides(DEFAULT_HERO_SLIDES));
+  }, [initialSlides]);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
     const t = setInterval(() => setIndex((i) => (i + 1) % slides.length), 5000);
     return () => clearInterval(t);
-  }, []);
+  }, [slides.length]);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [slides]);
+
+  if (!slides.length) return null;
+
+  const current = slides[index] || slides[0];
 
   return (
     <section className="relative overflow-hidden gradient-hero">
       <div className="container-main">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative grid min-h-[420px] items-center gap-8 py-12 md:min-h-[520px] md:grid-cols-2 md:py-16"
-        >
+        <div className="relative grid min-h-[420px] items-center gap-8 py-12 md:min-h-[520px] md:grid-cols-2 md:py-16">
           <AnimatePresence mode="wait">
             <motion.div
-              key={index}
+              key={`text-${current.id}`}
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 30 }}
@@ -64,11 +68,11 @@ export default function HeroCarousel() {
                 </p>
               </div>
               <h1 className="font-display text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-6xl">
-                {slides[index].title}
+                {current.title}
               </h1>
-              <p className="mt-4 max-w-md text-lg text-store-muted">{slides[index].subtitle}</p>
-              <Link href={slides[index].href} className="btn-primary mt-8">
-                {slides[index].cta}
+              <p className="mt-4 max-w-md text-lg text-store-muted">{current.subtitle}</p>
+              <Link href={current.href} className="btn-primary mt-8">
+                {current.cta}
               </Link>
             </motion.div>
           </AnimatePresence>
@@ -76,7 +80,7 @@ export default function HeroCarousel() {
           <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-float md:aspect-square">
             <AnimatePresence mode="wait">
               <motion.div
-                key={index}
+                key={`img-${current.id}`}
                 initial={{ opacity: 0, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -84,8 +88,8 @@ export default function HeroCarousel() {
                 className="absolute inset-0"
               >
                 <Image
-                  src={slides[index].image}
-                  alt={slides[index].title}
+                  src={current.image}
+                  alt={current.title}
                   fill
                   className="object-cover"
                   priority
@@ -95,37 +99,41 @@ export default function HeroCarousel() {
             </AnimatePresence>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-2 md:left-auto md:right-8 md:translate-x-0">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setIndex(i)}
-                className={`h-2 rounded-full transition-all ${
-                  i === index ? 'w-8 bg-store-text' : 'w-2 bg-store-border'
-                }`}
-                aria-label={`Slide ${i + 1}`}
-              />
-            ))}
-          </div>
+          {slides.length > 1 && (
+            <>
+              <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-2 md:left-auto md:right-8 md:translate-x-0">
+                {slides.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setIndex(i)}
+                    className={`h-2 rounded-full transition-all ${
+                      i === index ? 'w-8 bg-store-text' : 'w-2 bg-store-border'
+                    }`}
+                    aria-label={`Slide ${i + 1}`}
+                  />
+                ))}
+              </div>
 
-          <button
-            type="button"
-            onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)}
-            className="absolute left-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2 shadow md:flex"
-            aria-label="Previous"
-          >
-            <ChevronLeft />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIndex((i) => (i + 1) % slides.length)}
-            className="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2 shadow md:flex"
-            aria-label="Next"
-          >
-            <ChevronRight />
-          </button>
-        </motion.div>
+              <button
+                type="button"
+                onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)}
+                className="absolute left-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2 shadow md:flex"
+                aria-label="Previous"
+              >
+                <ChevronLeft />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIndex((i) => (i + 1) % slides.length)}
+                className="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2 shadow md:flex"
+                aria-label="Next"
+              >
+                <ChevronRight />
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </section>
   );

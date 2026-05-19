@@ -24,11 +24,14 @@ export default function ProductDetail({ product, related }: Props) {
   const p = useMemo(() => normalizeProduct(product), [product]);
   const offeredSizes = p.sizes;
 
+  const [mounted, setMounted] = useState(false);
   const [size, setSize] = useState<Size | ''>('');
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const sizeFromUrl = searchParams.get('size') || '';
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const preferred =
@@ -41,6 +44,7 @@ export default function ProductDetail({ product, related }: Props) {
   }, [p._id, sizeFromUrl, offeredSizes.join(','), p]);
 
   const selectedStock = size ? stockForSize(p, size) : 0;
+  const showOutOfStockOverlay = mounted && size && selectedStock <= 0;
   const price = p.offerPrice && p.offerPrice < p.price ? p.offerPrice : p.price;
   const discount = getDiscountPercent(p.price, p.offerPrice);
   const canPurchase = size && selectedStock > 0;
@@ -68,19 +72,15 @@ export default function ProductDetail({ product, related }: Props) {
   }
 
   return (
-    <motion.div className="container-main py-10 md:py-14">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid gap-10 lg:grid-cols-2"
-      >
+    <div className="container-main py-10 md:py-14">
+      <div className="grid gap-10 lg:grid-cols-2">
         <ProductImageGallery
           images={p.images}
           alt={p.name}
           priority
-          imageClassName={size && selectedStock <= 0 ? 'opacity-60 grayscale' : ''}
+          imageClassName={showOutOfStockOverlay ? 'opacity-60 grayscale' : ''}
           overlay={
-            size && selectedStock <= 0 ? (
+            showOutOfStockOverlay ? (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
                 <span className="rounded-full bg-white px-5 py-2 text-sm font-bold uppercase tracking-wider">
                   No stock — {size}
@@ -198,7 +198,7 @@ export default function ProductDetail({ product, related }: Props) {
             </motion.button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {related.length > 0 && (
         <section className="mt-20 border-t border-store-border pt-16">
@@ -210,6 +210,6 @@ export default function ProductDetail({ product, related }: Props) {
           </div>
         </section>
       )}
-    </motion.div>
+    </div>
   );
 }

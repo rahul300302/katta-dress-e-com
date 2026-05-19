@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props {
@@ -65,28 +64,20 @@ export default function ProductImageGallery({
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={className}>
+    <div className={className}>
       <div className="group relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint">
         {overlay}
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={selected}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0"
-          >
-            <Image
-              src={safeImages[selected]}
-              alt={`${alt} — image ${selected + 1}`}
-              fill
-              className={`object-cover ${imageClassName}`}
-              priority={priority && selected === 0}
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </motion.div>
-        </AnimatePresence>
+        <div className="absolute inset-0">
+          <Image
+            key={safeImages[selected]}
+            src={safeImages[selected]}
+            alt={`${alt} — image ${selected + 1}`}
+            fill
+            className={`object-cover transition-opacity duration-200 ${imageClassName}`}
+            priority={priority && selected === 0}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+        </div>
 
         {hasMultiple && (
           <>
@@ -94,7 +85,7 @@ export default function ProductImageGallery({
               type="button"
               onClick={goPrev}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-store-text shadow-md opacity-0 transition hover:bg-white group-hover:opacity-100 focus:opacity-100 md:opacity-100"
+              className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-store-text shadow-md transition hover:bg-white md:opacity-100"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -102,7 +93,7 @@ export default function ProductImageGallery({
               type="button"
               onClick={goNext}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-store-text shadow-md opacity-0 transition hover:bg-white group-hover:opacity-100 focus:opacity-100 md:opacity-100"
+              className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-store-text shadow-md transition hover:bg-white md:opacity-100"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -121,7 +112,6 @@ export default function ProductImageGallery({
               type="button"
               onClick={() => setSelected(i)}
               aria-label={`View image ${i + 1}`}
-              aria-current={i === selected ? 'true' : undefined}
               className={`relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
                 i === selected
                   ? 'border-store-text ring-2 ring-store-text/20'
@@ -133,6 +123,6 @@ export default function ProductImageGallery({
           ))}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

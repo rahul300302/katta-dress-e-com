@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ShoppingBag, Menu, X, User, Package } from 'lucide-react';
@@ -16,9 +16,29 @@ const links = [
   { href: '/products?isNewArrival=true', label: 'New Arrivals' },
 ];
 
+function navLinkActive(pathname: string, searchParams: URLSearchParams, href: string) {
+  const [path, query] = href.split('?');
+  if (pathname !== path) return false;
+  if (!query) {
+    return (
+      !searchParams.get('isHotSale') &&
+      !searchParams.get('isNewArrival') &&
+      !searchParams.get('isOffer') &&
+      !searchParams.get('isBestSeller') &&
+      !searchParams.get('q')
+    );
+  }
+  const linkParams = new URLSearchParams(query);
+  for (const [key, value] of linkParams.entries()) {
+    if (searchParams.get(key) !== value) return false;
+  }
+  return true;
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -54,7 +74,7 @@ export default function Navbar() {
               key={l.href}
               href={l.href}
               className={`text-sm font-medium transition-colors hover:text-store-text ${
-                pathname === l.href ? 'text-store-text' : 'text-store-muted'
+                navLinkActive(pathname, searchParams, l.href) ? 'text-store-text' : 'text-store-muted'
               }`}
             >
               {l.label}
