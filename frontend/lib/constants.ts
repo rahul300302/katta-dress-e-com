@@ -8,8 +8,10 @@ export const BRAND = {
     city: 'Nagercoil - 629 002',
     country: 'India',
   },
-  phone: '+91 98765 43210',
-  email: 'hello@katta.in',
+  phone: '+91 82208 65023',
+  email: 'kattaclothings@gmail.com',
+  instagram: 'https://www.instagram.com/katta.in_?igsh=MWYxdjAzdGgyaG5pMg==',
+  whatsapp: 'https://wa.me/918220865023',
 };
 
 export const SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as const;

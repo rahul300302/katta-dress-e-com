@@ -8,6 +8,7 @@ import {
   formatOrder,
 } from '../utils/cartHelpers.js';
 import { decrementSizeStock } from '../utils/productStock.js';
+import { sendOrderConfirmedEmails, sendOrderShippedEmail } from '../utils/orderNotify.js';
 async function orderWithItems(order) {
   const items = await OrderItem.findAll({ where: { orderId: order.id } });
   return formatOrder(order, items);
@@ -107,6 +108,8 @@ export async function finalizePaidOrder(orderId, razorpayOrderId, razorpayPaymen
   const cart = await Cart.findOne({ where: { userId: order.userId } });
   if (cart) await CartItem.destroy({ where: { cartId: cart.id } });
 
+  await sendOrderConfirmedEmails(order);
+
   return orderWithItems(order);
 }
 
@@ -140,7 +143,17 @@ export async function updateOrderStatus(req, res, next) {
     const { orderStatus } = req.body;
     const order = await Order.findByPk(req.params.id);
     if (!order) throw new AppError('Order not found', 404);
+
+    const previousStatus = order.orderStatus;
     await order.update({ orderStatus });
+
+    if (orderStatus === 'confirmed' && previousStatus !== 'confirmed') {
+      await sendOrderConfirmedEmails(order);
+    }
+    if (orderStatus === 'shipped' && previousStatus !== 'shipped') {
+      await sendOrderShippedEmail(order);
+    }
+
     res.json({ success: true, data: await orderWithItems(order) });
   } catch (err) {
     next(err);
