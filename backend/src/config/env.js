@@ -22,7 +22,13 @@ const env = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     callbackUrl:
       process.env.GOOGLE_CALLBACK_URL ||
-      'http://localhost:5000/api/auth/google/callback',
+      (() => {
+        const host =
+          process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+        return host
+          ? `https://${host}/api/auth/google/callback`
+          : 'http://localhost:5000/api/auth/google/callback';
+      })(),
   },
   adminEmails: (process.env.ADMIN_EMAILS || 'admin@gmail.com')
     .split(',')

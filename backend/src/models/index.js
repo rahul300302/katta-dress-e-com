@@ -113,6 +113,10 @@ OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 export { User, Product, Cart, CartItem, Order, OrderItem, sequelize };
 
 export async function syncDatabase() {
+  // Skip schema sync on Vercel — cold starts would run ALTER on every instance.
+  if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
+    return;
+  }
   await sequelize.sync({ alter: true });
   console.log('Database tables synced');
 }

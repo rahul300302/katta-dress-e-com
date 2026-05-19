@@ -13,7 +13,10 @@ export const sequelize = new Sequelize(
     dialectOptions: env.db.ssl
       ? { ssl: { require: true, rejectUnauthorized: false } }
       : {},
-    pool: { max: 10, min: 0, acquire: 30000, idle: 10000 },
+    pool:
+      process.env.VERCEL === '1'
+        ? { max: 1, min: 0, acquire: 20000, idle: 5000 }
+        : { max: 10, min: 0, acquire: 30000, idle: 10000 },
   }
 );
 

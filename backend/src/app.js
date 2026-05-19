@@ -6,16 +6,35 @@ import rateLimit from 'express-rate-limit';
 import passport from 'passport';
 import env from './config/env.js';
 import { configurePassport } from './config/passport.js';
+import { ensureDb } from './config/initDb.js';
 import routes from './routes/index.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 const app = express();
 
+if (process.env.VERCEL === '1') {
+  app.set('trust proxy', 1);
+}
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+
+const allowedOrigins = [
+  env.frontendUrl,
+  ...(process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean),
+];
 
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
@@ -36,6 +55,15 @@ app.use(
       req.path.startsWith('/api/auth/google'),
   })
 );
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureDb();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 configurePassport();
 app.use(passport.initialize());

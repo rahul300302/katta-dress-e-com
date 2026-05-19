@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import passport from 'passport';
+import env from '../config/env.js';
 import { authenticate } from '../middleware/auth.js';
 import { getMe, googleCallback } from '../controllers/authController.js';
 
@@ -24,7 +25,7 @@ router.get(
 );
 
 router.get('/failure', (_req, res) => {
-  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/login?error=oauth`);
+  res.redirect(`${env.frontendUrl}/auth/login?error=oauth`);
 });
 
 router.get('/me', authenticate, getMe);
