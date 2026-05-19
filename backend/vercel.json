@@ -1,5 +1,6 @@
 {
     "version": 2,
+    "installCommand": "npm install pg sequelize",
     "builds": [
       {
         "src": "src/server.js",
