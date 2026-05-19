@@ -126,7 +126,7 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
             onClick={(e) => e.stopPropagation()}
             className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
           >
-            <motion.div className="flex items-center justify-between border-b border-store-border px-5 py-4">
+            <div className="flex items-center justify-between border-b border-store-border px-5 py-4">
               <div className="flex items-center gap-2">
                 {activeMode === 'view' ? (
                   <Eye className="h-4 w-4 text-store-muted" />
@@ -173,10 +173,10 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
                 >
                   <X className="h-5 w-5" />
                 </button>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
 
-            <motion.div className="overflow-y-auto p-5">
+            <div className="overflow-y-auto p-5">
               {activeMode === 'view' ? (
                 <div className="grid gap-8 md:grid-cols-2">
                   <ProductImageGallery images={p.images} alt={p.name} priority />
@@ -188,12 +188,12 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
                         {discount}% OFF
                       </span>
                     )}
-                    <motion.div className="mt-3 flex items-center gap-3">
+                    <div className="mt-3 flex items-center gap-3">
                       <span className="text-xl font-bold">{formatPrice(price)}</span>
                       {p.offerPrice && p.offerPrice < p.price && (
                         <span className="text-store-muted line-through">{formatPrice(p.price)}</span>
                       )}
-                    </motion.div>
+                    </div>
                     <p className="mt-4 text-sm leading-relaxed text-store-muted">{p.description}</p>
                     <div className="mt-6">
                       <p className="text-sm font-semibold">Size stock</p>
@@ -275,7 +275,7 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
                     images={form.images}
                     onChange={(images) => setForm({ ...form, images })}
                   />
-                  <motion.div className="flex flex-wrap gap-3 text-sm">
+                  <div className="flex flex-wrap gap-3 text-sm">
                     {(['isHotSale', 'isOffer', 'isNewArrival', 'isBestSeller'] as const).map((key) => (
                       <label key={key} className="flex items-center gap-2">
                         <input
@@ -286,13 +286,13 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
                         {key.replace('is', '')}
                       </label>
                     ))}
-                  </motion.div>
+                  </div>
                   <button type="submit" disabled={saving} className="btn-primary w-full">
                     {saving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </form>
               )}
-            </motion.div>
+            </div>
           </motion.div>
         </motion.div>
       )}

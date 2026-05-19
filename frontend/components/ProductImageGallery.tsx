@@ -54,15 +54,13 @@ export default function ProductImageGallery({
 
   if (!total) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+      <div
         className={`relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint ${className}`}
       >
-        <motion.div className="flex h-full items-center justify-center text-sm text-store-muted">
+        <div className="flex h-full items-center justify-center text-sm text-store-muted">
           No image
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     );
   }
 
@@ -113,7 +111,7 @@ export default function ProductImageGallery({
             </span>
           </>
         )}
-      </motion.div>
+      </div>
 
       {showThumbnails && hasMultiple && (
         <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
@@ -133,7 +131,7 @@ export default function ProductImageGallery({
               <Image src={img} alt="" fill className="object-cover" sizes="64px" />
             </button>
           ))}
-        </motion.div>
+        </div>
       )}
     </motion.div>
   );
