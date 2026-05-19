@@ -1,6 +1,8 @@
+import pg from 'pg';
 import { Sequelize } from 'sequelize';
 import env from './env.js';
 
+// Vercel/serverless bundlers drop optional deps unless imported explicitly.
 export const sequelize = new Sequelize(
   env.db.name,
   env.db.user,
@@ -9,6 +11,7 @@ export const sequelize = new Sequelize(
     host: env.db.host,
     port: env.db.port,
     dialect: 'postgres',
+    dialectModule: pg,
     logging: env.nodeEnv === 'development' ? false : false,
     dialectOptions: env.db.ssl
       ? { ssl: { require: true, rejectUnauthorized: false } }
