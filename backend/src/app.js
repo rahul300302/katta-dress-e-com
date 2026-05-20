@@ -19,8 +19,8 @@ if (process.env.VERCEL === '1') {
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 const allowedOrigins = [
-  env.frontendUrl,
-  ...(process.env.ALLOWED_ORIGINS || '')
+  'https://katta-dress-e-com.vercel.app',
+  ...(env.frontendUrl || process.env.ALLOWED_ORIGINS || '')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean),
