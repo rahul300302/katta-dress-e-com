@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { DEFAULT_HERO_SLIDES, type HeroSlide } from '@/lib/heroSlides';
+import { slideIsVideo } from '@/lib/mediaUtils';
 import api from '@/services/api';
 
 interface Props {
@@ -20,18 +21,19 @@ export default function HeroCarousel({ slides: initialSlides }: Props) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (initialSlides?.length) {
-      setSlides(initialSlides);
-      return;
-    }
     api
       .get('/site/hero')
       .then((res) => {
         if (res.data.success && Array.isArray(res.data.data) && res.data.data.length) {
           setSlides(res.data.data);
+        } else if (initialSlides?.length) {
+          setSlides(initialSlides);
         }
       })
-      .catch(() => setSlides(DEFAULT_HERO_SLIDES));
+      .catch(() => {
+        if (initialSlides?.length) setSlides(initialSlides);
+        else setSlides(DEFAULT_HERO_SLIDES);
+      });
   }, [initialSlides]);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function HeroCarousel({ slides: initialSlides }: Props) {
 
   const current = slides[index] || slides[0];
   const mediaUrl = current.media || current.image;
-  const isVideo = current.mediaType === 'video' || /\.mp4($|\?)/i.test(mediaUrl);
+  const isVideo = slideIsVideo(current);
 
   return (
     <section className="relative overflow-hidden gradient-hero">
@@ -82,7 +84,7 @@ export default function HeroCarousel({ slides: initialSlides }: Props) {
           <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-float md:aspect-square">
             <AnimatePresence mode="wait">
               <motion.div
-                key={`img-${current.id}`}
+                key={`media-${current.id}-${isVideo ? 'video' : 'image'}-${mediaUrl}`}
                 initial={{ opacity: 0, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}

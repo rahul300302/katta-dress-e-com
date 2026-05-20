@@ -1,12 +1,16 @@
 import { SiteSetting } from '../models/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { DEFAULT_HERO_SLIDES } from '../constants/heroSlides.js';
+import { inferMediaType } from '../utils/mediaUtils.js';
 
 const HERO_KEY = 'hero_slides';
+const ANNOUNCEMENT_KEY = 'announcement_bar';
+const DEFAULT_ANNOUNCEMENT =
+  "Free shipping on orders above ₹999 · Premium men's tees only";
 
 function normalizeSlide(slide, index) {
   const media = String(slide.media || slide.image || '').trim();
-  const mediaType = slide.mediaType === 'video' ? 'video' : 'image';
+  const mediaType = inferMediaType({ ...slide, media });
   return {
     id: slide.id || `slide-${index + 1}`,
     title: String(slide.title || '').trim(),
@@ -61,6 +65,45 @@ export async function updateHeroSlides(req, res, next) {
       await setting.update({ value: slides });
     }
     res.json({ success: true, message: 'Hero carousel updated', data: setting.value });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getOrCreateAnnouncementSetting() {
+  let setting = await SiteSetting.findOne({ where: { key: ANNOUNCEMENT_KEY } });
+  if (!setting) {
+    setting = await SiteSetting.create({
+      key: ANNOUNCEMENT_KEY,
+      value: { text: DEFAULT_ANNOUNCEMENT },
+    });
+  }
+  return setting;
+}
+
+export async function getAnnouncement(_req, res, next) {
+  try {
+    const setting = await getOrCreateAnnouncementSetting();
+    const text = String(setting.value?.text || DEFAULT_ANNOUNCEMENT).trim();
+    res.json({ success: true, data: { text: text || DEFAULT_ANNOUNCEMENT } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateAnnouncement(req, res, next) {
+  try {
+    const text = String(req.body.text || '').trim();
+    if (!text) throw new AppError('Announcement text is required', 400);
+    if (text.length > 200) throw new AppError('Announcement text is too long (max 200)', 400);
+
+    let setting = await SiteSetting.findOne({ where: { key: ANNOUNCEMENT_KEY } });
+    if (!setting) {
+      setting = await SiteSetting.create({ key: ANNOUNCEMENT_KEY, value: { text } });
+    } else {
+      await setting.update({ value: { text } });
+    }
+    res.json({ success: true, message: 'Announcement updated', data: setting.value });
   } catch (err) {
     next(err);
   }

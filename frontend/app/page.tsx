@@ -1,11 +1,12 @@
 import HeroCarousel from '@/components/HeroCarousel';
 import ViewTshirtsCTA from '@/components/ViewTshirtsCTA';
 import ProductSection from '@/components/ProductSection';
-import StoreLocation from '@/components/StoreLocation';
 import TrustPaymentBar from '@/components/TrustPaymentBar';
 import serverApi from '@/services/serverApi';
 import type { Product } from '@/services/api';
 import { DEFAULT_HERO_SLIDES, type HeroSlide } from '@/lib/heroSlides';
+
+export const dynamic = 'force-dynamic';
 
 async function getHeroSlides(): Promise<HeroSlide[]> {
   try {
@@ -78,7 +79,6 @@ export default async function HomePage() {
         products={data.bestSellers}
         href="/products?sort=latest"
       />
-      <StoreLocation />
     </>
   );
 }

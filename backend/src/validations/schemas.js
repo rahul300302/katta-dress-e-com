@@ -41,6 +41,12 @@ export const productSchema = Joi.object({
   isBestSeller: Joi.boolean(),
 });
 
+export const feedbackSchema = Joi.object({
+  name: Joi.string().min(2).max(80).required(),
+  email: Joi.string().email().allow('', null).optional(),
+  message: Joi.string().min(10).max(2000).required(),
+});
+
 export const paymentVerifySchema = Joi.object({
   orderId: Joi.string().required(),
   razorpayOrderId: Joi.string().required(),

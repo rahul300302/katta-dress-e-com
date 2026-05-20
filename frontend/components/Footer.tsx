@@ -1,12 +1,50 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Instagram, MapPin, Mail, Phone, MessageCircle } from 'lucide-react';
+import { Instagram, MapPin, Mail, Phone, MessageCircle, Loader2, Send } from 'lucide-react';
 import { BRAND } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
+import api from '@/services/api';
+
+const mailtoHref = `mailto:${BRAND.email}?subject=${encodeURIComponent('KATTA — Customer inquiry')}`;
+
+function openEmail() {
+  window.location.href = mailtoHref;
+}
 
 export default function Footer() {
+  const [feedback, setFeedback] = useState({ name: '', email: '', message: '' });
+  const [sending, setSending] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+
+  async function handleFeedbackSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSending(true);
+    setFeedbackStatus('idle');
+    setFeedbackMessage('');
+    try {
+      const res = await api.post('/contact/feedback', {
+        name: feedback.name.trim(),
+        email: feedback.email.trim() || undefined,
+        message: feedback.message.trim(),
+      });
+      if (res.data.success) {
+        setFeedbackStatus('success');
+        setFeedbackMessage(res.data.message || 'Feedback sent!');
+        setFeedback({ name: '', email: '', message: '' });
+      }
+    } catch (err: unknown) {
+      setFeedbackStatus('error');
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setFeedbackMessage(msg || 'Could not send feedback. Try again or email us directly.');
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
     <footer className="mt-20 border-t border-store-border bg-store-faint">
       <motion.div
@@ -76,7 +114,11 @@ export default function Footer() {
             </li>
             <li>
               <a
-                href={`mailto:${BRAND.email}`}
+                href={mailtoHref}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openEmail();
+                }}
                 className="flex items-center gap-2 transition hover:text-store-text"
               >
                 <Mail className="h-4 w-4 shrink-0" />
@@ -104,13 +146,70 @@ export default function Footer() {
               <MessageCircle className="h-4 w-4" />
             </a>
             <a
-              href={`mailto:${BRAND.email}`}
+              href={mailtoHref}
+              onClick={(e) => {
+                e.stopPropagation();
+                openEmail();
+              }}
               aria-label="Email KATTA"
               className="rounded-full border border-store-border p-2 transition hover:border-store-text hover:bg-white"
             >
               <Mail className="h-4 w-4" />
             </a>
           </div>
+
+          <form onSubmit={handleFeedbackSubmit} className="mt-8 space-y-3">
+            <h4 className="text-sm font-semibold uppercase tracking-wider">Send Feedback</h4>
+            <p className="text-xs text-store-muted">
+              Your message is sent to {BRAND.email}
+            </p>
+            <input
+              required
+              type="text"
+              placeholder="Your name"
+              value={feedback.name}
+              onChange={(e) => setFeedback((f) => ({ ...f, name: e.target.value }))}
+              className="input-elegant !py-2 text-sm"
+              maxLength={80}
+            />
+            <input
+              type="email"
+              placeholder="Your email (optional)"
+              value={feedback.email}
+              onChange={(e) => setFeedback((f) => ({ ...f, email: e.target.value }))}
+              className="input-elegant !py-2 text-sm"
+            />
+            <textarea
+              required
+              placeholder="Your feedback..."
+              value={feedback.message}
+              onChange={(e) => setFeedback((f) => ({ ...f, message: e.target.value }))}
+              rows={3}
+              maxLength={2000}
+              className="input-elegant resize-none text-sm"
+            />
+            <button
+              type="submit"
+              disabled={sending}
+              className="btn-primary flex w-full items-center justify-center gap-2 !py-2.5 text-sm"
+            >
+              {sending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {sending ? 'Sending...' : 'Send feedback'}
+            </button>
+            {feedbackMessage && (
+              <p
+                className={`text-xs ${
+                  feedbackStatus === 'success' ? 'text-green-700' : 'text-red-600'
+                }`}
+              >
+                {feedbackMessage}
+              </p>
+            )}
+          </form>
         </div>
       </motion.div>
 

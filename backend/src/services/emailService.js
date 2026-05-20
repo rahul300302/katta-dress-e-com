@@ -11,7 +11,6 @@ function getTransporter() {
     host: env.smtp.host,
     port: env.smtp.port,
     secure: env.smtp.secure,
-    service: "gmail",
     auth: {
       user: env.smtp.user,
       pass: env.smtp.pass,
@@ -72,19 +71,47 @@ function emailLayout(title, bodyHtml) {
   </body></html>`;
 }
 
-export async function sendMail({ to, subject, html }) {
+function htmlToPlainText(html) {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export async function sendMail({ to, subject, html, text, replyTo: customReplyTo }) {
   const transport = getTransporter();
   if (!transport) {
     console.warn('[email] SMTP not configured — skipping:', subject, '→', to);
     return false;
   }
 
+  const plainText = text || htmlToPlainText(html);
+  const defaultReply = env.storeEmail || env.smtp.from;
+
   try {
     await transport.sendMail({
-      from: `"KATTA Store" <${env.smtp.from}>`,
+      from: `"KATTA" <${env.smtp.from}>`,
+      replyTo: customReplyTo || `"KATTA Support" <${defaultReply}>`,
       to,
       subject,
       html,
+      text: plainText,
+      headers: {
+        'X-Entity-Ref-ID': `katta-order-${Date.now()}`,
+        Precedence: 'auto',
+      },
     });
     return true;
   } catch (err) {
@@ -135,27 +162,36 @@ export function buildOrderConfirmedEmail({ order, items, customerName, forStore 
 export function buildOrderShippedEmail({ order, items, customerName }) {
   const orderId = String(order.id);
   const body = `
-  <div style="font-family: Arial, sans-serif; font-size: 15px; color: #222; line-height: 1.5;">
     <p>Hi ${customerName || 'there'},</p>
-
-    <p>Your KATTA order <strong>#${orderId}</strong> has been shipped and is on its way.</p>
-
+    <p>Your KATTA order <strong>#${orderId}</strong> has been shipped and is on its way to you.</p>
     ${orderItemsHtml(items)}
-
-    <p>You will receive another update once the delivery status changes.</p>
-
     <p style="margin-top:16px;">
-      Thank you for shopping with KATTA.
+      Subtotal: ${formatInr(order.subtotal)}<br/>
+      Delivery: ${formatInr(order.deliveryCharge)}<br/>
+      <strong>Total: ${formatInr(order.totalAmount)}</strong>
     </p>
+    <p>We will notify you when your order is delivered.</p>
+    <p style="margin-top:16px;">Thank you for shopping with KATTA.</p>
+  `;
+  const html = emailLayout('Your order has shipped', body);
+  const text = [
+    `Hi ${customerName || 'there'},`,
+    '',
+    `Your KATTA order #${orderId} has been shipped and is on its way.`,
+    '',
+    `Order total: ${formatInr(order.totalAmount)}`,
+    '',
+    'We will notify you when your order is delivered.',
+    '',
+    'Thank you for shopping with KATTA.',
+    '',
+    `Questions? Email ${env.storeEmail || 'kattaclothings@gmail.com'}`,
+  ].join('\n');
 
-    <p style="font-size:12px;color:#666;">
-      This is an order update email from KATTA.
-    </p>
-  </div>
-`;
   return {
-    subject: `KATTA — Order #${orderId} shipped`,
-    html: emailLayout('Your order is on the way', body),
+    subject: `Your KATTA order #${orderId} has shipped`,
+    html,
+    text,
   };
 }
 
@@ -189,5 +225,43 @@ export async function notifyOrderConfirmed(order, items, customerEmail, customer
 export async function notifyOrderShipped(order, items, customerEmail, customerName) {
   if (!customerEmail) return;
   const mail = buildOrderShippedEmail({ order, items, customerName });
-  await sendMail({ to: customerEmail, ...mail });
+  await sendMail({ to: customerEmail, subject: mail.subject, html: mail.html, text: mail.text });
+}
+
+const FEEDBACK_EMAIL = 'kattaclothings@gmail.com';
+
+export async function sendFeedbackEmail({ name, email, message }) {
+  const to = env.storeEmail || FEEDBACK_EMAIL;
+  const safeName = escapeHtml(name);
+  const safeEmail = email ? escapeHtml(email) : 'Not provided';
+  const safeMessage = escapeHtml(message).replace(/\n/g, '<br/>');
+
+  const body = `
+    <p><strong>New feedback from the KATTA website</strong></p>
+    <p><strong>Name:</strong> ${safeName}<br/>
+    <strong>Email:</strong> ${safeEmail}</p>
+    <p style="margin-top:16px;padding:12px;background:#f5f5f5;border-radius:8px;line-height:1.6;">
+      ${safeMessage}
+    </p>
+  `;
+
+  const html = emailLayout('Customer feedback', body);
+  const text = [
+    'New feedback from the KATTA website',
+    '',
+    `Name: ${name}`,
+    `Email: ${email || 'Not provided'}`,
+    '',
+    message,
+  ].join('\n');
+
+  const replyTo = email ? `"${name}" <${email}>` : undefined;
+
+  return sendMail({
+    to,
+    subject: `KATTA — Feedback from ${name}`,
+    html,
+    text,
+    replyTo,
+  });
 }

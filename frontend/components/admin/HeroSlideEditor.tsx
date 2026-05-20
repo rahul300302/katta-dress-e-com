@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import api from '@/services/api';
 import { DEFAULT_HERO_SLIDES, newSlideId, type HeroSlide } from '@/lib/heroSlides';
+import { slideIsVideo } from '@/lib/mediaUtils';
 
 const LINK_PRESETS = [
   { label: 'All products', href: '/products' },
@@ -224,7 +225,7 @@ export default function HeroSlideEditor() {
 
               <div className="grid gap-6 p-4 md:grid-cols-[140px_1fr]">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-store-faint">
-                  {slide.mediaType === 'video' && (slide.media || slide.image) ? (
+                  {slideIsVideo(slide) && (slide.media || slide.image) ? (
                     <video
                       src={slide.media || slide.image}
                       className="h-full w-full object-cover"
@@ -336,7 +337,7 @@ export default function HeroSlideEditor() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-store-muted">Live preview</p>
           <div className="overflow-hidden rounded-3xl border border-store-border bg-gradient-to-br from-store-faint to-white shadow-float">
             <div className="relative aspect-[4/5]">
-              {preview?.mediaType === 'video' && (preview?.media || preview?.image) ? (
+              {slideIsVideo(preview || {}) && (preview?.media || preview?.image) ? (
                 <video
                   src={preview.media || preview.image}
                   className="h-full w-full object-cover"
