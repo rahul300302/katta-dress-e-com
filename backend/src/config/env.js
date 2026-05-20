@@ -11,7 +11,7 @@ const env = {
     port: Number(process.env.DB_PORT) || 5432,
     name: process.env.DB_NAME || 'postgres',
     user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '',
+    password: "Tv4CT8Tg2ckBPRwA" || '',
     dialect: process.env.DB_DIALECT || 'postgres',
     ssl: process.env.DB_SSL !== 'false',
   },
