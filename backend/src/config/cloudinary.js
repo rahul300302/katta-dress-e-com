@@ -40,3 +40,26 @@ export async function uploadToCloudinary(file) {
     stream.end(file.buffer);
   });
 }
+
+export async function uploadMediaToCloudinary(file, folder = 'katta/hero') {
+  const cld = getCloudinary();
+  const isVideo = file?.mimetype?.startsWith('video/');
+  return new Promise((resolve, reject) => {
+    const stream = cld.uploader.upload_stream(
+      {
+        folder,
+        resource_type: isVideo ? 'video' : 'image',
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else {
+          resolve({
+            url: result.secure_url,
+            mediaType: isVideo ? 'video' : 'image',
+          });
+        }
+      }
+    );
+    stream.end(file.buffer);
+  });
+}
