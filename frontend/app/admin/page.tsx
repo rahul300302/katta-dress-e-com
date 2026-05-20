@@ -203,13 +203,13 @@ export default function AdminPage() {
         ))}
       </div>
 
-      <div className="mt-10 flex gap-2 border-b border-store-border">
+      <div className="mt-10 flex flex-wrap gap-2 border-b border-store-border md:flex-nowrap md:overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-semibold ${
+            className={`whitespace-nowrap px-4 py-2 text-sm font-semibold ${
               tab === t.id ? 'border-b-2 border-store-text' : 'text-store-muted'
             }`}
           >
