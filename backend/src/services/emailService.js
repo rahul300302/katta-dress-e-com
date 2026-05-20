@@ -11,6 +11,7 @@ function getTransporter() {
     host: env.smtp.host,
     port: env.smtp.port,
     secure: env.smtp.secure,
+    service: "gmail",
     auth: {
       user: env.smtp.user,
       pass: env.smtp.pass,
@@ -134,11 +135,24 @@ export function buildOrderConfirmedEmail({ order, items, customerName, forStore 
 export function buildOrderShippedEmail({ order, items, customerName }) {
   const orderId = String(order.id);
   const body = `
+  <div style="font-family: Arial, sans-serif; font-size: 15px; color: #222; line-height: 1.5;">
     <p>Hi ${customerName || 'there'},</p>
-    <p>Your order <strong>#${orderId}</strong> has been <strong>shipped</strong> and is on its way.</p>
+
+    <p>Your KATTA order <strong>#${orderId}</strong> has been shipped and is on its way.</p>
+
     ${orderItemsHtml(items)}
-    <p style="margin-top:16px;">Thank you for shopping with KATTA.</p>
-  `;
+
+    <p>You will receive another update once the delivery status changes.</p>
+
+    <p style="margin-top:16px;">
+      Thank you for shopping with KATTA.
+    </p>
+
+    <p style="font-size:12px;color:#666;">
+      This is an order update email from KATTA.
+    </p>
+  </div>
+`;
   return {
     subject: `KATTA — Order #${orderId} shipped`,
     html: emailLayout('Your order is on the way', body),
