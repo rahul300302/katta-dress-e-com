@@ -47,6 +47,8 @@ export default function HeroCarousel({ slides: initialSlides }: Props) {
   if (!slides.length) return null;
 
   const current = slides[index] || slides[0];
+  const mediaUrl = current.media || current.image;
+  const isVideo = current.mediaType === 'video' || /\.mp4($|\?)/i.test(mediaUrl);
 
   return (
     <section className="relative overflow-hidden gradient-hero">
@@ -87,14 +89,26 @@ export default function HeroCarousel({ slides: initialSlides }: Props) {
                 transition={{ duration: 0.6 }}
                 className="absolute inset-0"
               >
-                <Image
-                  src={current.image}
-                  alt={current.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
+                {isVideo ? (
+                  <video
+                    key={mediaUrl}
+                    src={mediaUrl}
+                    className="h-full w-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <Image
+                    src={mediaUrl}
+                    alt={current.title}
+                    fill
+                    className="object-cover"
+                    priority
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                )}
               </motion.div>
             </AnimatePresence>
           </div>

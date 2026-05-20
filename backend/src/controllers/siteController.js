@@ -5,13 +5,17 @@ import { DEFAULT_HERO_SLIDES } from '../constants/heroSlides.js';
 const HERO_KEY = 'hero_slides';
 
 function normalizeSlide(slide, index) {
+  const media = String(slide.media || slide.image || '').trim();
+  const mediaType = slide.mediaType === 'video' ? 'video' : 'image';
   return {
     id: slide.id || `slide-${index + 1}`,
     title: String(slide.title || '').trim(),
     subtitle: String(slide.subtitle || '').trim(),
     cta: String(slide.cta || 'Shop Now').trim(),
     href: String(slide.href || '/products').trim(),
-    image: String(slide.image || '').trim(),
+    image: media,
+    media,
+    mediaType,
   };
 }
 
@@ -25,7 +29,7 @@ function validateSlides(slides) {
   return slides.map((s, i) => {
     const slide = normalizeSlide(s, i);
     if (!slide.title) throw new AppError(`Slide ${i + 1}: title is required`, 400);
-    if (!slide.image) throw new AppError(`Slide ${i + 1}: image is required`, 400);
+    if (!slide.media) throw new AppError(`Slide ${i + 1}: media is required`, 400);
     return slide;
   });
 }

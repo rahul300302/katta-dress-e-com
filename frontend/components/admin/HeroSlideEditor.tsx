@@ -8,6 +8,7 @@ import {
   GripVertical,
   ImageIcon,
   Loader2,
+  Film,
   Plus,
   Save,
   Sparkles,
@@ -70,6 +71,8 @@ export default function HeroSlideEditor() {
       cta: 'Shop Now',
       href: '/products',
       image: DEFAULT_HERO_SLIDES[0].image,
+      media: DEFAULT_HERO_SLIDES[0].media,
+      mediaType: 'image',
     };
     setSlides((list) => [...list, slide]);
     setPreviewIndex(slides.length);
@@ -85,19 +88,23 @@ export default function HeroSlideEditor() {
     setPreviewIndex(0);
   }
 
-  async function uploadImage(slideId: string, file: File) {
+  async function uploadMedia(slideId: string, file: File) {
     setUploadingId(slideId);
     try {
       const formData = new FormData();
-      formData.append('image', file);
-      const res = await api.post('/upload/image', formData, {
+      formData.append('media', file);
+      const res = await api.post('/upload/hero-media', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (res.data.success && res.data.data?.url) {
-        updateSlide(slideId, { image: res.data.data.url });
+        updateSlide(slideId, {
+          image: res.data.data.url,
+          media: res.data.data.url,
+          mediaType: res.data.data.mediaType || 'image',
+        });
       }
     } catch {
-      alert('Image upload failed. Check Cloudinary settings.');
+      alert('Media upload failed. Check Cloudinary settings.');
     } finally {
       setUploadingId(null);
     }
@@ -217,11 +224,25 @@ export default function HeroSlideEditor() {
 
               <div className="grid gap-6 p-4 md:grid-cols-[140px_1fr]">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-store-faint">
-                  {slide.image ? (
-                    <Image src={slide.image} alt="" fill className="object-cover" sizes="140px" />
+                  {slide.mediaType === 'video' && (slide.media || slide.image) ? (
+                    <video
+                      src={slide.media || slide.image}
+                      className="h-full w-full object-cover"
+                      muted
+                      loop
+                      playsInline
+                    />
+                  ) : (slide.media || slide.image) ? (
+                    <Image
+                      src={slide.media || slide.image}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="140px"
+                    />
                   ) : (
                     <div className="flex h-full items-center justify-center text-store-muted">
-                      <ImageIcon className="h-8 w-8" />
+                      <Film className="h-8 w-8" />
                     </div>
                   )}
                   <label className="absolute inset-x-2 bottom-2 cursor-pointer">
@@ -229,18 +250,18 @@ export default function HeroSlideEditor() {
                       {uploadingId === slide.id ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <ImageIcon className="h-3 w-3" />
+                        <Film className="h-3 w-3" />
                       )}
-                      Change image
+                      Upload image/video
                     </span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,video/*"
                       className="hidden"
                       disabled={uploadingId === slide.id}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) uploadImage(slide.id, file);
+                        if (file) uploadMedia(slide.id, file);
                         e.target.value = '';
                       }}
                     />
@@ -269,6 +290,18 @@ export default function HeroSlideEditor() {
                       className="input-elegant"
                     />
                     <select
+                      value={slide.mediaType || 'image'}
+                      onChange={(e) =>
+                        updateSlide(slide.id, { mediaType: e.target.value as 'image' | 'video' })
+                      }
+                      className="input-elegant"
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <select
                       value={slide.href}
                       onChange={(e) => updateSlide(slide.id, { href: e.target.value })}
                       className="input-elegant"
@@ -288,9 +321,9 @@ export default function HeroSlideEditor() {
                   />
                   <input
                     type="text"
-                    value={slide.image}
-                    onChange={(e) => updateSlide(slide.id, { image: e.target.value })}
-                    placeholder="Or paste image URL"
+                    value={slide.media || slide.image}
+                    onChange={(e) => updateSlide(slide.id, { media: e.target.value, image: e.target.value })}
+                    placeholder="Or paste media URL (image/video)"
                     className="input-elegant text-xs"
                   />
                 </div>
@@ -303,9 +336,17 @@ export default function HeroSlideEditor() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-store-muted">Live preview</p>
           <div className="overflow-hidden rounded-3xl border border-store-border bg-gradient-to-br from-store-faint to-white shadow-float">
             <div className="relative aspect-[4/5]">
-              {preview?.image && (
-                <Image src={preview.image} alt="" fill className="object-cover" sizes="400px" />
-              )}
+              {preview?.mediaType === 'video' && (preview?.media || preview?.image) ? (
+                <video
+                  src={preview.media || preview.image}
+                  className="h-full w-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                />
+              ) : (preview?.media || preview?.image) ? (
+                <Image src={preview.media || preview.image} alt="" fill className="object-cover" sizes="400px" />
+              ) : null}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-white/80">

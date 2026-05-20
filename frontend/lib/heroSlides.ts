@@ -5,6 +5,8 @@ export interface HeroSlide {
   cta: string;
   href: string;
   image: string;
+  media: string;
+  mediaType: 'image' | 'video';
 }
 
 export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
@@ -15,6 +17,8 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     cta: 'Shop Collection',
     href: '/products',
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1600&q=80',
+    media: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1600&q=80',
+    mediaType: 'image',
   },
   {
     id: 'slide-2',
@@ -23,6 +27,8 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     cta: 'View Offers',
     href: '/products?isHotSale=true',
     image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=1600&q=80',
+    media: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=1600&q=80',
+    mediaType: 'image',
   },
   {
     id: 'slide-3',
@@ -31,6 +37,8 @@ export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
     cta: 'Explore New',
     href: '/products?isNewArrival=true',
     image: 'https://images.unsplash.com/photo-1622445275463-afa6ab5c4ecc?w=1600&q=80',
+    media: 'https://images.unsplash.com/photo-1622445275463-afa6ab5c4ecc?w=1600&q=80',
+    mediaType: 'image',
   },
 ];
 
