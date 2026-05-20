@@ -29,10 +29,11 @@ function navLinkActive(pathname: string, searchParams: URLSearchParams, href: st
     );
   }
   const linkParams = new URLSearchParams(query);
-  for (const [key, value] of linkParams.entries()) {
-    if (searchParams.get(key) !== value) return false;
-  }
-  return true;
+  let isMatch = true;
+  linkParams.forEach((value, key) => {
+    if (searchParams.get(key) !== value) isMatch = false;
+  });
+  return isMatch;
 }
 
 export default function Navbar() {
