@@ -14,6 +14,7 @@ router.get(
       scope: ['profile', 'email'],
       session: false,
       state,
+      prompt: 'select_account',
     })(req, res, next);
   }
 );

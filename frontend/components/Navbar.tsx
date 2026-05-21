@@ -164,7 +164,7 @@ export default function Navbar() {
           >
             <ShoppingBag className="h-5 w-5" />
             <AnimatePresence mode="popLayout">
-              {itemCount > 0 && (
+              {mounted && itemCount > 0 && (
                 <motion.span
                   key={`${itemCount}-${bumpKey}`}
                   initial={{ scale: 0.5 }}

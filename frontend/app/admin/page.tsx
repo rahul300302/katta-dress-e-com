@@ -20,11 +20,14 @@ import AdminProductModal, { type ProductFormData } from '@/components/admin/Admi
 import type { SizeStockMap } from '@/lib/productStock';
 import { useAuthStore } from '@/store/authStore';
 import { getGoogleAuthUrl } from '@/lib/auth';
+import BrandingEditor from '@/components/admin/BrandingEditor';
+import { useMounted } from '@/hooks/useMounted';
 
 type Tab = 'products' | 'hero' | 'orders' | 'users';
 
 export default function AdminPage() {
   const router = useRouter();
+  const mounted = useMounted();
   const isAdmin = useAuthStore((s) => s.isAdmin());
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
   const [stats, setStats] = useState({ users: 0, products: 0, orders: 0, revenue: 0 });
@@ -51,6 +54,7 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
+    if (!mounted) return;
     if (!isAuthenticated) {
       router.push(`/auth/login?redirect=/admin`);
       return;
@@ -153,6 +157,14 @@ export default function AdminPage() {
     setUsers((list) => list.map((u) => (u._id === user._id ? res.data.data : u)));
   }
 
+  if (!mounted) {
+    return (
+      <div className="container-main py-20 text-center text-store-muted animate-pulse">
+        Loading admin...
+      </div>
+    );
+  }
+
   if (!isAuthenticated) return null;
 
   if (!isAdmin) {
@@ -179,7 +191,7 @@ export default function AdminPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'products', label: 'Products' },
-    { id: 'hero', label: 'Hero Carousel' },
+    { id: 'hero', label: 'Site Settings' },
     { id: 'orders', label: 'Orders' },
     { id: 'users', label: 'Users' },
   ];
@@ -229,6 +241,7 @@ export default function AdminPage() {
 
       {tab === 'hero' && (
         <div className="space-y-8">
+          <BrandingEditor />
           <AnnouncementEditor />
           <HeroSlideEditor />
         </div>
@@ -236,7 +249,7 @@ export default function AdminPage() {
 
       {tab === 'products' && (
         <div className="mt-8 grid gap-10 lg:grid-cols-2">
-          <form onSubmit={handleCreateProduct} className="space-y-4 rounded-2xl border border-store-border p-6">
+          <form onSubmit={handleCreateProduct} className="space-y-4 rounded-2xl border border-store-border p-4 sm:p-6">
             <h2 className="flex items-center gap-2 font-semibold">
               <Plus className="h-4 w-4" /> Add Product
             </h2>
@@ -312,35 +325,37 @@ export default function AdminPage() {
           <div className="space-y-3">
             <h2 className="font-semibold text-store-muted">All Products ({products.length})</h2>
             {products.map((p) => (
-              <div key={p._id} className="flex items-center gap-4 rounded-xl border border-store-border p-4">
-                <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-store-faint">
-                  {p.images?.[0] ? (
-                    <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="56px" />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-[10px] text-store-muted">
-                      No img
-                    </div>
-                  )}
-                  {p.images.length > 1 && (
-                    <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 text-[9px] text-white">
-                      +{p.images.length - 1}
-                    </span>
-                  )}
+              <div key={p._id} className="flex flex-col gap-4 rounded-xl border border-store-border p-4 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-store-faint">
+                    {p.images?.[0] ? (
+                      <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="56px" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[10px] text-store-muted">
+                        No img
+                      </div>
+                    )}
+                    {p.images.length > 1 && (
+                      <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 text-[9px] text-white">
+                        +{p.images.length - 1}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-sm sm:text-base">{p.name}</p>
+                    <p className="text-xs sm:text-sm text-store-muted truncate">
+                      {formatPrice(p.offerPrice || p.price)} ·{' '}
+                      {Object.entries(p.sizeStock || {})
+                        .map(([s, n]) => `${s}:${n}`)
+                        .join(' · ') || `Stock ${p.stock}`}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{p.name}</p>
-                  <p className="text-sm text-store-muted">
-                    {formatPrice(p.offerPrice || p.price)} ·{' '}
-                    {Object.entries(p.sizeStock || {})
-                      .map(([s, n]) => `${s}:${n}`)
-                      .join(' · ') || `Stock ${p.stock}`}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
+                <div className="flex items-center gap-2 self-stretch sm:self-auto shrink-0 w-full sm:w-auto justify-end border-t border-store-border pt-3 sm:border-0 sm:pt-0">
                   <button
                     type="button"
                     onClick={() => openProductModal(p, 'view')}
-                    className="btn-secondary !px-3 !py-1.5 text-xs"
+                    className="btn-secondary !px-3 !py-1.5 text-xs flex items-center gap-1 flex-1 sm:flex-none justify-center"
                   >
                     <Eye className="h-3.5 w-3.5" />
                     View
@@ -348,7 +363,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => openProductModal(p, 'edit')}
-                    className="btn-secondary !px-3 !py-1.5 text-xs"
+                    className="btn-secondary !px-3 !py-1.5 text-xs flex items-center gap-1 flex-1 sm:flex-none justify-center"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     Edit
@@ -356,7 +371,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => deleteProduct(p._id)}
-                    className="text-xs text-red-600 hover:underline"
+                    className="text-xs text-red-600 hover:underline px-2 flex-none"
                   >
                     Delete
                   </button>

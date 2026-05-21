@@ -126,57 +126,57 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border border-store-border bg-store-bg text-store-text shadow-2xl sm:rounded-3xl"
       >
-        <div className="flex items-center justify-between border-b border-store-border px-5 py-4">
+        <div className="flex items-center justify-between border-b border-store-border px-4 py-3 sm:px-5 sm:py-4">
           <div className="flex items-center gap-2">
             {activeMode === 'view' ? (
               <Eye className="h-4 w-4 text-store-muted" />
             ) : (
               <Pencil className="h-4 w-4 text-store-muted" />
             )}
-            <h2 className="font-semibold">
+            <h2 className="font-semibold text-sm sm:text-base">
               {activeMode === 'view' ? 'View Product' : 'Edit Product'}
             </h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {activeMode === 'view' ? (
               <button
                 type="button"
                 onClick={() => setActiveMode('edit')}
-                className="btn-secondary !py-2 text-xs"
+                className="btn-secondary !py-1.5 !px-2.5 sm:!py-2 sm:!px-4 text-xs flex items-center gap-1"
               >
                 <Pencil className="h-3.5 w-3.5" />
-                Edit
+                <span className="hidden sm:inline">Edit</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setActiveMode('view')}
-                className="btn-secondary !py-2 text-xs"
+                className="btn-secondary !py-1.5 !px-2.5 sm:!py-2 sm:!px-4 text-xs flex items-center gap-1"
               >
                 <Eye className="h-3.5 w-3.5" />
-                Preview
+                <span className="hidden sm:inline">Preview</span>
               </button>
             )}
             <Link
               href={`/products/${product._id}`}
               target="_blank"
-              className="btn-secondary !py-2 text-xs"
+              className="btn-secondary !py-1.5 !px-2.5 sm:!py-2 sm:!px-4 text-xs flex items-center gap-1"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Store
+              <span className="hidden sm:inline">Store</span>
             </Link>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="rounded-full p-2 hover:bg-store-faint"
+              className="rounded-full p-1.5 hover:bg-store-faint"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <div className="overflow-y-auto p-5">
+        <div className="overflow-y-auto p-4 sm:p-5">
           {activeMode === 'view' ? (
             <div className="grid gap-8 md:grid-cols-2">
               <ProductImageGallery

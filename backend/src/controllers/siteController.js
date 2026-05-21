@@ -108,3 +108,50 @@ export async function updateAnnouncement(req, res, next) {
     next(err);
   }
 }
+
+const BRANDING_KEY = 'site_branding';
+const DEFAULT_BRANDING = {
+  name: 'KATTA',
+  logo: '/logo.png',
+  tagline: "Premium Men's T-Shirts",
+};
+
+async function getOrCreateBrandingSetting() {
+  let setting = await SiteSetting.findOne({ where: { key: BRANDING_KEY } });
+  if (!setting) {
+    setting = await SiteSetting.create({
+      key: BRANDING_KEY,
+      value: DEFAULT_BRANDING,
+    });
+  }
+  return setting;
+}
+
+export async function getBranding(_req, res, next) {
+  try {
+    const setting = await getOrCreateBrandingSetting();
+    res.json({ success: true, data: setting.value });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateBranding(req, res, next) {
+  try {
+    const { name, logo, tagline } = req.body;
+    let setting = await SiteSetting.findOne({ where: { key: BRANDING_KEY } });
+    const newValue = {
+      name: String(name || 'KATTA').trim(),
+      logo: String(logo || '/logo.png').trim(),
+      tagline: String(tagline || '').trim(),
+    };
+    if (!setting) {
+      setting = await SiteSetting.create({ key: BRANDING_KEY, value: newValue });
+    } else {
+      await setting.update({ value: newValue });
+    }
+    res.json({ success: true, message: 'Branding updated', data: setting.value });
+  } catch (err) {
+    next(err);
+  }
+}

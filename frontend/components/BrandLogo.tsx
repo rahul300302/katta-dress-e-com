@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { BRAND } from '@/lib/constants';
+import { useSiteStore } from '@/store/siteStore';
+import { useMounted } from '@/hooks/useMounted';
 
 const sizes = {
   sm: { box: 'h-8 w-8', text: 'text-lg', gap: 'gap-2' },
@@ -25,6 +27,11 @@ export default function BrandLogo({
   priority = false,
 }: BrandLogoProps) {
   const s = sizes[size];
+  const mounted = useMounted();
+  const branding = useSiteStore((state) => state.branding);
+
+  const displayLogo = mounted ? branding.logo : BRAND.logo;
+  const displayName = mounted ? branding.name : BRAND.name;
 
   const content = (
     <span className={`inline-flex items-center ${s.gap} ${className}`}>
@@ -32,8 +39,8 @@ export default function BrandLogo({
         className={`relative ${s.box} shrink-0 overflow-hidden rounded-lg bg-[#0a0a0a] ring-1 ring-black/10`}
       >
         <Image
-          src={BRAND.logo}
-          alt={`${BRAND.name} logo`}
+          src={displayLogo}
+          alt={`${displayName} logo`}
           fill
           className="object-cover"
           sizes="80px"
@@ -42,7 +49,7 @@ export default function BrandLogo({
       </span>
       {showName && (
         <span className={`font-display font-black tracking-tighter text-store-text ${s.text}`}>
-          {BRAND.name}
+          {displayName}
         </span>
       )}
     </span>

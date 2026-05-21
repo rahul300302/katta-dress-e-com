@@ -8,6 +8,9 @@ import { BRAND } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 import api from '@/services/api';
 
+import { useSiteStore } from '@/store/siteStore';
+import { useMounted } from '@/hooks/useMounted';
+
 const mailtoHref = `mailto:${BRAND.email}?subject=${encodeURIComponent('KATTA — Customer inquiry')}`;
 
 function openEmail() {
@@ -19,6 +22,12 @@ export default function Footer() {
   const [sending, setSending] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [feedbackMessage, setFeedbackMessage] = useState('');
+
+  const mounted = useMounted();
+  const branding = useSiteStore((state) => state.branding);
+
+  const displayName = mounted ? branding.name : BRAND.name;
+  const displayTagline = mounted ? branding.tagline : BRAND.tagline;
 
   async function handleFeedbackSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +65,7 @@ export default function Footer() {
       >
         <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 300 }}>
           <BrandLogo size="lg" href="/" />
-          <p className="mt-3 text-sm text-store-muted">{BRAND.tagline}</p>
+          <p className="mt-3 text-sm text-store-muted">{displayTagline}</p>
           <address className="mt-4 not-italic text-sm leading-relaxed text-store-muted">
             <MapPin className="mb-2 inline h-4 w-4" />
             <br />
@@ -217,7 +226,7 @@ export default function Footer() {
         className="border-t border-store-border py-6 text-center text-xs text-store-muted"
         suppressHydrationWarning
       >
-        © {new Date().getFullYear()} {BRAND.name}. All rights reserved.
+        © {new Date().getFullYear()} {displayName}. All rights reserved.
       </div>
     </footer>
   );
