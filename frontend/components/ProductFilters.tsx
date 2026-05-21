@@ -245,7 +245,7 @@ export default function ProductFilters({
             )}
           </div>
         </aside>
-        <div>{children}</div>
+        <div className="min-w-0">{children}</div>
       </div>
     </>
   );

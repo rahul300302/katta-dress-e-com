@@ -101,7 +101,7 @@ export default function ProductDetail({ product, related }: Props) {
   }
 
   return (
-    <div className="container-main pb-28 py-8 sm:pb-14 sm:py-10 md:py-14">
+    <div className="container-main pt-8 pb-28 sm:pt-10 sm:pb-14 md:pt-14 md:pb-14">
       <AnimatePresence>
         {addedToast && (
           <motion.div
@@ -114,9 +114,9 @@ export default function ProductDetail({ product, related }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="grid gap-10 lg:grid-cols-2">
-        <div ref={galleryRef}>
+ 
+      <div className="grid gap-10 lg:grid-cols-2 min-w-0">
+        <div ref={galleryRef} className="min-w-0">
           <ProductImageGallery
             images={displayImages}
             alt={p.name}
@@ -133,8 +133,8 @@ export default function ProductDetail({ product, related }: Props) {
             }
           />
         </div>
-
-        <div>
+ 
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-wider text-store-muted">{p.collection}</p>
           <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">{p.name}</h1>
           {discount > 0 && (

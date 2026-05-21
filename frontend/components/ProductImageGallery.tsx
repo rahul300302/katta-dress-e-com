@@ -33,39 +33,48 @@ export default function ProductImageGallery({
   const total = safeImages.length;
   const hasMultiple = total > 1;
 
-  const goPrev = useCallback(() => {
-    setSelected((i) => (i === 0 ? total - 1 : i - 1));
-  }, [total]);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  const goNext = useCallback(() => {
-    setSelected((i) => (i === total - 1 ? 0 : i + 1));
-  }, [total]);
+  const goPrev = () => {
+    if (total <= 1) return;
+    setSelected((prev) => (prev === 0 ? total - 1 : prev - 1));
+  };
 
-  useEffect(() => {
-    if (!hasMultiple) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'ArrowLeft') goPrev();
-      if (e.key === 'ArrowRight') goNext();
+  const goNext = () => {
+    if (total <= 1) return;
+    setSelected((prev) => (prev === total - 1 ? 0 : prev + 1));
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (touchStart === null || touchEnd === null) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    if (isLeftSwipe) {
+      goNext();
+    } else if (isRightSwipe) {
+      goPrev();
     }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [hasMultiple, goPrev, goNext]);
-
-  if (!total) {
-    return (
-      <div
-        className={`relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint ${className}`}
-      >
-        <div className="flex h-full items-center justify-center text-sm text-store-muted">
-          No image
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
     <div className={className}>
-      <div className="group relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint">
+      <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="group relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint select-none cursor-grab active:cursor-grabbing"
+      >
         {overlay}
         <div className="absolute inset-0">
           <Image
