@@ -3,11 +3,46 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --store-bg: #ffffff;
+    --store-text: #121212;
+    --store-border: #e8e8e8;
+    --store-faint: #f5f5f5;
+    --store-muted: #5c5c5c;
+    --store-accent: #121212;
+    --store-surface: #ffffff;
+    --store-overlay: rgba(0, 0, 0, 0.55);
+  }
+
+  html.dark, .dark {
+    --store-bg: #0a0a0a;
+    --store-text: #f0f0f0;
+    --store-border: #333333;
+    --store-faint: #161616;
+    --store-muted: #b0b0b0;
+    --store-accent: #f0f0f0;
+    --store-surface: #141414;
+    --store-overlay: rgba(0, 0, 0, 0.75);
+  }
+
   html {
     scroll-behavior: smooth;
+    color-scheme: light;
   }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
-    @apply bg-store-bg text-store-text antialiased;
+    background-color: var(--store-bg);
+    color: var(--store-text);
+    @apply antialiased;
+  }
+
+  /* Icons inherit readable color */
+  svg {
+    color: currentColor;
   }
 }
 
@@ -16,24 +51,45 @@
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-store-text px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-black active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-store-text px-6 py-3 text-sm font-semibold text-store-bg transition-all duration-300 hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-store-border bg-white px-6 py-3 text-sm font-semibold text-store-text transition-all duration-300 hover:border-store-text hover:shadow-card active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-store-border bg-store-bg px-6 py-3 text-sm font-semibold text-store-text transition-all duration-300 hover:border-store-text hover:bg-store-faint active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .input-elegant {
-    @apply w-full rounded-xl border border-store-border bg-white px-4 py-3 text-sm outline-none transition-all duration-200 placeholder:text-store-muted focus:border-store-text focus:ring-2 focus:ring-store-text/10;
+    @apply w-full rounded-xl border border-store-border bg-store-bg px-4 py-3 text-sm text-store-text outline-none transition-all duration-200 placeholder:text-store-muted focus:border-store-text focus:ring-2;
+  }
+  .input-elegant:focus {
+    --tw-ring-color: color-mix(in srgb, var(--store-text) 20%, transparent);
   }
   .section-title {
-    @apply font-display text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl;
+    @apply font-display text-2xl font-bold tracking-tight text-store-text sm:text-3xl md:text-4xl;
+  }
+  .surface-card {
+    @apply rounded-2xl border border-store-border text-store-text;
+    background-color: var(--store-surface);
   }
   .product-card {
-    @apply relative overflow-hidden rounded-2xl border border-store-border bg-white transition-all duration-500 hover:-translate-y-1 hover:shadow-float;
+    @apply relative overflow-hidden rounded-2xl border border-store-border transition-all duration-500 hover:-translate-y-1 hover:shadow-float;
+    background-color: var(--store-surface);
+  }
+  .product-card-compact {
+    @apply relative overflow-hidden rounded-xl transition-all duration-300 hover:opacity-95;
+    background-color: var(--store-surface);
   }
   .badge-offer {
-    @apply absolute left-3 top-3 z-10 rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-white;
+    @apply absolute left-3 top-3 z-10 rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-store-bg;
   }
   .gradient-hero {
-    background: linear-gradient(135deg, #f7f7f7 0%, #ffffff 50%, #f0f0f0 100%);
+    background: linear-gradient(135deg, var(--store-faint) 0%, var(--store-bg) 50%, var(--store-faint) 100%);
+  }
+  .bg-store-bg-95 {
+    background-color: color-mix(in srgb, var(--store-bg) 95%, transparent);
+  }
+  .chip-active {
+    @apply border-store-text bg-store-text text-store-bg;
+  }
+  .chip-inactive {
+    @apply border-store-border bg-store-faint text-store-text hover:border-store-text;
   }
 }

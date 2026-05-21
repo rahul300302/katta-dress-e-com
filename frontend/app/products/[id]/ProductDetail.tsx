@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
 import type { Product } from '@/services/api';
 import { formatPrice, getDiscountPercent, type Size } from '@/lib/constants';
 import { normalizeProduct, stockForSize } from '@/lib/productStock';
+import { getColorVariants, getDisplayImages } from '@/lib/colorVariants';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import api from '@/services/api';
+import { useCartStore } from '@/store/cartStore';
+import { rectCenter } from '@/lib/cartFly';
 import ProductCard from '@/components/ProductCard';
 import ProductImageGallery from '@/components/ProductImageGallery';
+import ColorSelector from '@/components/ColorSelector';
 
 interface Props {
   product: Product;
@@ -21,17 +24,33 @@ export default function ProductDetail({ product, related }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { requireAuth } = useRequireAuth();
+  const addItem = useCartStore((s) => s.addItem);
+  const [addedToast, setAddedToast] = useState(false);
+  const galleryRef = useRef<HTMLDivElement>(null);
   const p = useMemo(() => normalizeProduct(product), [product]);
+  const colorVariants = useMemo(() => getColorVariants(p), [p]);
   const offeredSizes = p.sizes;
 
   const [mounted, setMounted] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('');
   const [size, setSize] = useState<Size | ''>('');
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const sizeFromUrl = searchParams.get('size') || '';
+  const displayImages = useMemo(
+    () => getDisplayImages(p, selectedColor),
+    [p, selectedColor]
+  );
+  const selectedVariantImage =
+    colorVariants.find((v) => v.name === selectedColor)?.image || displayImages[0];
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const first = colorVariants[0]?.name || '';
+    setSelectedColor(first);
+  }, [p._id, colorVariants.map((v) => v.name).join(',')]);
 
   useEffect(() => {
     const preferred =
@@ -61,8 +80,18 @@ export default function ProductDetail({ product, related }: Props) {
     }
     setLoading(true);
     try {
-      await api.post('/cart', { productId: p._id, size, quantity: qty });
-      router.push(goCheckout ? '/checkout' : '/cart');
+      const origin = rectCenter(galleryRef.current);
+      await addItem(p._id, size, qty, {
+        x: origin?.x ?? window.innerWidth / 2,
+        y: origin?.y ?? window.innerHeight / 2,
+        image: selectedVariantImage,
+      });
+      if (goCheckout) {
+        router.push('/checkout');
+      } else {
+        setAddedToast(true);
+        setTimeout(() => setAddedToast(false), 2500);
+      }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       alert(msg || 'Failed to add to cart');
@@ -72,29 +101,44 @@ export default function ProductDetail({ product, related }: Props) {
   }
 
   return (
-    <div className="container-main py-10 md:py-14">
+    <div className="container-main pb-28 py-8 sm:pb-14 sm:py-10 md:py-14">
+      <AnimatePresence>
+        {addedToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="fixed left-1/2 top-24 z-[60] -translate-x-1/2 rounded-full bg-store-text px-5 py-2.5 text-sm font-semibold text-store-bg shadow-lg"
+          >
+            Added to bag ✓
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="grid gap-10 lg:grid-cols-2">
-        <ProductImageGallery
-          images={p.images}
-          alt={p.name}
-          priority
-          imageClassName={showOutOfStockOverlay ? 'opacity-60 grayscale' : ''}
-          overlay={
-            showOutOfStockOverlay ? (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
-                <span className="rounded-full bg-white px-5 py-2 text-sm font-bold uppercase tracking-wider">
-                  No stock — {size}
-                </span>
-              </div>
-            ) : undefined
-          }
-        />
+        <div ref={galleryRef}>
+          <ProductImageGallery
+            images={displayImages}
+            alt={p.name}
+            priority
+            imageClassName={showOutOfStockOverlay ? 'opacity-60 grayscale' : ''}
+            overlay={
+              showOutOfStockOverlay ? (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
+                  <span className="rounded-full bg-store-bg px-5 py-2 text-sm font-bold uppercase tracking-wider text-store-text">
+                    No stock — {size}
+                  </span>
+                </div>
+              ) : undefined
+            }
+          />
+        </div>
 
         <div>
           <p className="text-xs uppercase tracking-wider text-store-muted">{p.collection}</p>
           <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">{p.name}</h1>
           {discount > 0 && (
-            <span className="mt-3 inline-block rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-white">
+            <span className="mt-3 inline-block rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-store-bg">
               {discount}% OFF
             </span>
           )}
@@ -106,12 +150,19 @@ export default function ProductDetail({ product, related }: Props) {
           </div>
           <p className="mt-6 leading-relaxed text-store-muted">{p.description}</p>
 
+          <ColorSelector
+            variants={colorVariants}
+            selected={selectedColor}
+            onSelect={setSelectedColor}
+          />
+
           <div className="mt-8">
-            <p className="mb-3 text-sm font-semibold">Select Size</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="mb-3 text-sm font-semibold">Size</p>
+            <div className="flex flex-wrap gap-3">
               {offeredSizes.map((s) => {
                 const qtyLeft = stockForSize(p, s);
                 const disabled = qtyLeft <= 0;
+                const isSelected = size === s;
                 return (
                   <button
                     key={s}
@@ -121,18 +172,15 @@ export default function ProductDetail({ product, related }: Props) {
                       setSize(s as Size);
                       setQty(1);
                     }}
-                    className={`min-w-[56px] rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
-                      size === s
-                        ? 'border-store-text bg-store-text text-white'
+                    className={`flex h-12 w-12 items-center justify-center rounded-full border text-sm font-semibold transition ${
+                      isSelected
+                        ? 'chip-active'
                         : disabled
-                          ? 'cursor-not-allowed border-store-border bg-store-faint text-store-muted opacity-60'
-                          : 'border-store-border hover:border-store-text'
+                          ? 'chip-inactive line-through opacity-40'
+                          : 'chip-inactive'
                     }`}
                   >
-                    <span className="block">{s}</span>
-                    <span className={`mt-0.5 block text-[10px] font-normal ${size === s ? 'text-white/80' : ''}`}>
-                      {qtyLeft > 0 ? `${qtyLeft} left` : 'Out'}
-                    </span>
+                    {s}
                   </button>
                 );
               })}
@@ -168,12 +216,10 @@ export default function ProductDetail({ product, related }: Props) {
                   ? `${selectedStock} available in size ${size}`
                   : `No stock in size ${size}`
                 : 'Select a size'}
-              {' · '}
-              Colors: {p.colors.join(', ')}
             </p>
           </div>
 
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-10 hidden flex-col gap-3 sm:flex sm:flex-row">
             <motion.button
               whileHover={{ scale: canPurchase ? 1.02 : 1 }}
               whileTap={{ scale: canPurchase ? 0.98 : 1 }}
@@ -183,7 +229,7 @@ export default function ProductDetail({ product, related }: Props) {
               className="btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShoppingBag className="h-4 w-4" />
-              Add to Cart
+              Add to bag
             </motion.button>
             <motion.button
               whileHover={{ scale: canPurchase ? 1.02 : 1 }}
@@ -197,6 +243,28 @@ export default function ProductDetail({ product, related }: Props) {
               Buy Now
             </motion.button>
           </div>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-store-border bg-store-bg-95 p-4 backdrop-blur-md sm:hidden">
+        <div className="container-main flex gap-2">
+          <motion.button
+            type="button"
+            disabled={loading || !canPurchase}
+            onClick={() => addToCart(false)}
+            className="btn-primary flex-1 !py-3 text-sm"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Add to bag
+          </motion.button>
+          <motion.button
+            type="button"
+            disabled={loading || !canPurchase}
+            onClick={() => addToCart(true)}
+            className="btn-secondary flex-1 !py-3 text-sm"
+          >
+            Buy now
+          </motion.button>
         </div>
       </div>
 

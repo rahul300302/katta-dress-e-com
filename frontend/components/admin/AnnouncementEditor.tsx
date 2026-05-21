@@ -51,7 +51,7 @@ export default function AnnouncementEditor() {
   }
 
   return (
-    <section className="rounded-2xl border border-store-border bg-white p-6">
+    <section className="surface-card p-6">
       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-store-muted">
         <Truck className="h-4 w-4" />
         Top banner

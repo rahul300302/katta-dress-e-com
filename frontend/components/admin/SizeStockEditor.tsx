@@ -34,7 +34,7 @@ export default function SizeStockEditor({ value, onChange }: Props) {
         {SIZES.map((size) => (
           <label
             key={size}
-            className="flex flex-col gap-1 rounded-xl border border-store-border bg-white px-3 py-2"
+            className="flex flex-col gap-1 rounded-xl border border-store-border bg-store-faint px-3 py-2"
           >
             <span className="text-xs font-semibold">{size}</span>
             <input

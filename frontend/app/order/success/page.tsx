@@ -8,12 +8,18 @@ import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import api, { type Order } from '@/services/api';
 import { formatPrice, BRAND } from '@/lib/constants';
+import { useCartStore } from '@/store/cartStore';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
   const paymentId = searchParams.get('paymentId');
   const [order, setOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    // Sync cart store on success mount
+    useCartStore.getState().refresh();
+  }, []);
 
   useEffect(() => {
     if (!orderId) return;
@@ -26,7 +32,7 @@ function SuccessContent() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
-        className="mx-auto max-w-2xl rounded-3xl border border-store-border bg-white p-8 text-center shadow-card md:p-12"
+        className="surface-card mx-auto max-w-2xl p-8 text-center shadow-card md:p-12"
       >
         <motion.div
           initial={{ scale: 0 }}

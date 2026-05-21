@@ -21,7 +21,7 @@ function LoginContent() {
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md rounded-3xl border border-store-border bg-white p-10 text-center shadow-card"
+        className="surface-card w-full max-w-md p-10 text-center shadow-card"
       >
         <div className="flex flex-col items-center">
           <BrandLogo size="xl" showName={false} href="/" priority />
@@ -35,7 +35,7 @@ function LoginContent() {
         </p>
 
         {error && (
-          <p className="mt-4 rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">
+          <p className="mt-4 rounded-xl bg-store-faint px-4 py-2 text-sm text-red-500">
             Sign in failed. Please try again.
           </p>
         )}

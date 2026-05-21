@@ -33,6 +33,12 @@ export const productSchema = Joi.object({
     .min(1)
     .required(),
   colors: Joi.array().items(Joi.string()),
+  colorVariants: Joi.array().items(
+    Joi.object({
+      name: Joi.string().min(1).required(),
+      image: Joi.string().uri().required(),
+    })
+  ),
   sizeStock: Joi.object(),
   stock: Joi.number().integer().min(0).default(0),
   isHotSale: Joi.boolean(),

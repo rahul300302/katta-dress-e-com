@@ -24,6 +24,7 @@ export interface Product {
   sizes: string[];
   sizeStock?: Record<string, number>;
   colors: string[];
+  colorVariants?: { name: string; image: string }[];
   stock: number;
   isHotSale?: boolean;
   isOffer?: boolean;

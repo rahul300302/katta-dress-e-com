@@ -42,10 +42,35 @@ function buildOrder(sort) {
   }
 }
 
+function normalizeColorVariants(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((v) => ({
+      name: String(v?.name || '').trim(),
+      image: String(v?.image || '').trim(),
+    }))
+    .filter((v) => v.name && v.image);
+}
+
 function parseProductBody(body) {
   const sizeStock = parseSizeStockInput(body.sizeStock, body.sizes, body.stock);
   const sizes = Object.keys(sizeStock);
   const stock = Object.values(sizeStock).reduce((sum, n) => sum + n, 0);
+
+  let colorVariants = normalizeColorVariants(body.colorVariants);
+  let images = body.images || [];
+  let colors = body.colors || [];
+
+  if (colorVariants.length) {
+    colors = colorVariants.map((v) => v.name);
+    images = colorVariants.map((v) => v.image);
+  } else if (colors.length && images.length) {
+    colorVariants = colors.map((name, i) => ({
+      name: String(name).trim(),
+      image: images[i] || images[0] || '',
+    }));
+  }
+
   return {
     ...body,
     price: Number(body.price),
@@ -53,8 +78,9 @@ function parseProductBody(body) {
     sizeStock,
     sizes,
     stock,
-    images: body.images || [],
-    colors: body.colors || [],
+    images,
+    colors,
+    colorVariants,
     isHotSale: Boolean(body.isHotSale),
     isOffer: Boolean(body.isOffer),
     isNewArrival: Boolean(body.isNewArrival),

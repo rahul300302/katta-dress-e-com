@@ -28,6 +28,7 @@ const Product = sequelize.define(
     sizes: { type: DataTypes.JSONB, defaultValue: [] },
     sizeStock: { type: DataTypes.JSONB, defaultValue: {} },
     colors: { type: DataTypes.JSONB, defaultValue: [] },
+    colorVariants: { type: DataTypes.JSONB, defaultValue: [] },
     stock: { type: DataTypes.INTEGER, defaultValue: 0 },
     isHotSale: { type: DataTypes.BOOLEAN, defaultValue: false },
     isOffer: { type: DataTypes.BOOLEAN, defaultValue: false },

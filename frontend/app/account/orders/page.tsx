@@ -12,11 +12,11 @@ import { useMounted } from '@/hooks/useMounted';
 import { useAuthStore } from '@/store/authStore';
 
 const statusColors: Record<string, string> = {
-  placed: 'bg-gray-100 text-gray-800',
-  confirmed: 'bg-blue-100 text-blue-800',
-  shipped: 'bg-amber-100 text-amber-800',
-  delivered: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
+  placed: 'bg-store-faint text-store-muted',
+  confirmed: 'bg-store-faint text-blue-600 dark:text-blue-400',
+  shipped: 'bg-store-faint text-amber-600 dark:text-amber-400',
+  delivered: 'bg-store-faint text-green-600 dark:text-green-400',
+  cancelled: 'bg-store-faint text-red-500',
 };
 
 export default function MyOrdersPage() {
@@ -88,7 +88,7 @@ export default function MyOrdersPage() {
             >
               <Link
                 href={`/order/success?id=${order._id}${order.razorpayPaymentId ? `&paymentId=${order.razorpayPaymentId}` : ''}`}
-                className="group flex flex-col gap-4 rounded-2xl border border-store-border bg-white p-5 transition hover:border-store-text hover:shadow-card sm:flex-row sm:items-center sm:justify-between"
+                className="surface-card group flex flex-col gap-4 p-5 transition hover:border-store-text hover:shadow-card sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex gap-4">
                   <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 300 }} className="flex -space-x-2">
@@ -127,7 +127,9 @@ export default function MyOrdersPage() {
                   </span>
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-gray-100'
+                      order.paymentStatus === 'paid'
+                        ? 'bg-store-faint text-green-600 dark:text-green-400'
+                        : 'bg-store-faint text-store-muted'
                     }`}
                   >
                     {order.paymentStatus}

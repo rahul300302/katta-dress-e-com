@@ -7,6 +7,7 @@ import api, { type CartData, type DeliveryAddress, type Order } from '@/services
 import { formatPrice, BRAND } from '@/lib/constants';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useRazorpay } from '@/hooks/useRazorpay';
+import { useCartStore } from '@/store/cartStore';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -66,6 +67,8 @@ export default function CheckoutPage() {
             razorpaySignature: response.razorpay_signature,
           });
           const finalized = verifyRes.data.data;
+          // Clear frontend cart state instantly
+          useCartStore.getState().clear();
           router.push(
             `/order/success?id=${finalized._id}&paymentId=${response.razorpay_payment_id}`
           );

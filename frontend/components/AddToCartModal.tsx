@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Minus, Plus, ShoppingBag, X } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, X, Check } from 'lucide-react';
 import type { Product } from '@/services/api';
 import { formatPrice, getDiscountPercent } from '@/lib/constants';
 import { normalizeProduct, stockForSize } from '@/lib/productStock';
-import api from '@/services/api';
+import { useCartStore } from '@/store/cartStore';
+import { rectCenter } from '@/lib/cartFly';
 
 interface Props {
   product: Product;
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export default function AddToCartModal({ product, open, onClose, initialSize }: Props) {
+  const imageRef = useRef<HTMLDivElement>(null);
+  const addItem = useCartStore((s) => s.addItem);
   const [mounted, setMounted] = useState(false);
   const p = normalizeProduct(product);
   const price = p.offerPrice && p.offerPrice < p.price ? p.offerPrice : p.price;
@@ -80,8 +83,14 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
     setLoading(true);
     setError('');
     try {
-      await api.post('/cart', { productId: p._id, size, quantity: qty });
+      const origin = rectCenter(imageRef.current);
+      await addItem(p._id, size, qty, {
+        x: origin?.x ?? window.innerWidth / 2,
+        y: origin?.y ?? window.innerHeight / 2,
+        image: p.images[0],
+      });
       setSuccess(true);
+      setTimeout(() => onClose(), 1200);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg || 'Could not add to cart');
@@ -95,11 +104,7 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div
-          className="fixed inset-0 z-[9999] overflow-y-auto overscroll-contain"
-          aria-hidden={!open}
-        >
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[9999] overflow-y-auto overscroll-contain">
           <motion.button
             type="button"
             aria-label="Close dialog"
@@ -110,23 +115,21 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
             className="fixed inset-0 bg-black/55 backdrop-blur-[2px]"
           />
 
-          {/* Centred panel — min-h-full + flex centers in scrollable viewport */}
-          <div className="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+          <div className="relative flex min-h-full items-end justify-center p-0 sm:items-center sm:p-6">
             <motion.div
               role="dialog"
               aria-modal="true"
-              aria-labelledby="add-to-cart-title"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative flex w-full max-w-md max-h-[min(90vh,calc(100dvh-2rem))] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+              className="relative flex w-full max-w-md max-h-[92dvh] flex-col overflow-hidden rounded-t-3xl border border-store-border bg-store-bg text-store-text shadow-2xl sm:max-h-[min(90vh,calc(100dvh-2rem))] sm:rounded-3xl"
             >
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute right-3 top-3 z-30 rounded-full border border-store-border bg-white p-2 shadow-sm transition hover:bg-store-faint"
+                className="absolute right-3 top-3 z-30 rounded-full border border-store-border bg-store-faint p-2 text-store-text shadow-sm"
                 aria-label="Close"
               >
                 <X className="h-4 w-4" />
@@ -134,37 +137,31 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
 
               <div className="overflow-y-auto overscroll-contain">
                 {success ? (
-                  <div className="p-8 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-                      <ShoppingBag className="h-7 w-7 text-green-700" />
-                    </div>
-                    <h2 id="add-to-cart-title" className="mt-4 text-lg font-bold">
-                      Added to cart
-                    </h2>
+                  <div className="p-10 text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-store-faint text-green-600 dark:text-green-400"
+                    >
+                      <Check className="h-7 w-7 text-green-700" />
+                    </motion.div>
+                    <h2 className="mt-4 text-lg font-bold">Added to bag</h2>
                     <p className="mt-1 text-sm text-store-muted">
                       {qty}× {p.name} ({size})
                     </p>
-                    <p className="mt-1 text-xs text-store-muted">
-                      Adding the same size again increases quantity in your cart.
-                    </p>
-                    <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-                      <button type="button" onClick={onClose} className="btn-secondary flex-1">
-                        Continue shopping
-                      </button>
-                      <a href="/cart" className="btn-primary flex-1 text-center">
-                        View cart
-                      </a>
-                    </div>
                   </div>
                 ) : (
                   <>
-                    <div className="relative aspect-[4/3] shrink-0 bg-store-faint">
+                    <div
+                      ref={imageRef}
+                      className="relative aspect-[4/3] shrink-0 bg-store-faint"
+                    >
                       {discount > 0 && (
                         <span className="badge-offer absolute left-3 top-3 z-10">-{discount}%</span>
                       )}
                       {noStockOnImage && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55">
-                          <span className="rounded-full bg-white px-5 py-2 text-sm font-bold uppercase tracking-wider text-store-text">
+                          <span className="rounded-full bg-store-bg px-5 py-2 text-sm font-bold uppercase text-store-text">
                             No stock
                           </span>
                         </div>
@@ -178,14 +175,16 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
                       />
                     </div>
 
-                    <div className="p-5 pb-6">
-                      <p className="text-xs uppercase tracking-wider text-store-muted">{p.collection}</p>
-                      <h2 id="add-to-cart-title" className="mt-1 pr-10 font-semibold leading-snug">
-                        {p.name}
-                      </h2>
+                    <div className="p-5 pb-8">
+                      <h2 className="pr-10 font-semibold leading-snug">{p.name}</h2>
                       <p className="mt-2 text-lg font-bold">{formatPrice(price)}</p>
+                      {p.colors.length > 0 && (
+                        <p className="mt-2 text-xs text-store-muted">
+                          Colors: {p.colors.join(', ')}
+                        </p>
+                      )}
 
-                      <p className="mt-5 text-sm font-semibold">Select size</p>
+                      <p className="mt-5 text-sm font-semibold">Size</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {p.sizes.map((s) => {
                           const left = stockForSize(p, s);
@@ -199,24 +198,17 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
                                 setQty(1);
                                 setError('');
                               }}
-                              className={`min-w-[52px] rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                              className={`min-w-[52px] rounded-xl border px-3 py-2 text-sm font-medium ${
                                 size === s
                                   ? disabled
-                                    ? 'border-red-500 bg-red-50 text-red-700'
-                                    : 'border-store-text bg-store-text text-white'
+                                    ? 'border-red-500/60 bg-store-faint text-red-500'
+                                    : 'chip-active'
                                   : disabled
-                                    ? 'border-store-border bg-store-faint text-store-muted'
-                                    : 'border-store-border hover:border-store-text'
+                                    ? 'chip-inactive opacity-50'
+                                    : 'chip-inactive border'
                               }`}
                             >
-                              <span className="block">{s}</span>
-                              <span
-                                className={`mt-0.5 block text-[10px] font-normal ${
-                                  size === s && !disabled ? 'text-white/80' : ''
-                                }`}
-                              >
-                                {left > 0 ? `${left} left` : 'Out'}
-                              </span>
+                              {s}
                             </button>
                           );
                         })}
@@ -229,8 +221,7 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
                             <button
                               type="button"
                               onClick={() => setQty((q) => Math.max(1, q - 1))}
-                              className="p-2.5 hover:bg-store-faint"
-                              aria-label="Decrease"
+                              className="p-2.5"
                             >
                               <Minus className="h-4 w-4" />
                             </button>
@@ -238,15 +229,11 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
                             <button
                               type="button"
                               onClick={() => setQty((q) => Math.min(selectedStock, q + 1))}
-                              className="p-2.5 hover:bg-store-faint"
-                              aria-label="Increase"
+                              className="p-2.5"
                             >
                               <Plus className="h-4 w-4" />
                             </button>
                           </div>
-                          <p className="mt-1 text-xs text-store-muted">
-                            {selectedStock} available in {size}
-                          </p>
                         </div>
                       )}
 
@@ -256,16 +243,10 @@ export default function AddToCartModal({ product, open, onClose, initialSize }: 
                         type="button"
                         disabled={loading || !canAdd}
                         onClick={handleAdd}
-                        className="btn-primary mt-5 w-full disabled:cursor-not-allowed disabled:opacity-50"
+                        className="btn-primary mt-5 w-full"
                       >
                         <ShoppingBag className="h-4 w-4" />
-                        {loading
-                          ? 'Adding...'
-                          : canAdd
-                            ? 'Add to cart'
-                            : size
-                              ? 'Out of stock'
-                              : 'Select a size'}
+                        {loading ? 'Adding...' : canAdd ? 'Add to bag' : 'Select size'}
                       </button>
                     </div>
                   </>

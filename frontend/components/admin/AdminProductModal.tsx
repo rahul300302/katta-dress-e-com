@@ -9,6 +9,8 @@ import { formatPrice, getDiscountPercent } from '@/lib/constants';
 import { normalizeProduct } from '@/lib/productStock';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import ImageUploader from '@/components/admin/ImageUploader';
+import ColorVariantEditor from '@/components/admin/ColorVariantEditor';
+import { getColorVariants, variantsToProductFields, type ColorVariant } from '@/lib/colorVariants';
 import SizeStockEditor from '@/components/admin/SizeStockEditor';
 import type { SizeStockMap } from '@/lib/productStock';
 
@@ -29,7 +31,7 @@ export interface ProductFormData {
   offerPrice: string;
   collection: string;
   sizeStock: SizeStockMap;
-  colors: string[];
+  colorVariants: ColorVariant[];
   images: string[];
   isHotSale: boolean;
   isOffer: boolean;
@@ -46,7 +48,9 @@ function productToForm(p: Product): ProductFormData {
     offerPrice: p.offerPrice != null ? String(p.offerPrice) : '',
     collection: p.collection || 'Essentials',
     sizeStock: normalized.sizeStock || {},
-    colors: p.colors || ['Black'],
+    colorVariants: getColorVariants(p).length
+      ? getColorVariants(p)
+      : [{ name: 'Black', image: p.images?.[0] || '' }],
     images: p.images || [],
     isHotSale: !!p.isHotSale,
     isOffer: !!p.isOffer,
@@ -82,8 +86,9 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!product || !form) return;
-    if (!form.images.length) {
-      alert('Add at least one product image');
+    const synced = variantsToProductFields(form.colorVariants);
+    if (!synced.colorVariants.length) {
+      alert('Add at least one color with an image');
       return;
     }
     if (!Object.keys(form.sizeStock).length) {
@@ -92,7 +97,11 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
     }
     setSaving(true);
     try {
-      await onSave(product._id, form);
+      await onSave(product._id, {
+        ...form,
+        colorVariants: synced.colorVariants,
+        images: synced.images.length ? synced.images : form.images,
+      });
       onClose();
     } catch {
       alert('Failed to update product');
@@ -115,7 +124,7 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl border border-store-border bg-store-bg text-store-text shadow-2xl sm:rounded-3xl"
       >
         <div className="flex items-center justify-between border-b border-store-border px-5 py-4">
           <div className="flex items-center gap-2">
@@ -170,12 +179,16 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
         <div className="overflow-y-auto p-5">
           {activeMode === 'view' ? (
             <div className="grid gap-8 md:grid-cols-2">
-              <ProductImageGallery images={p.images} alt={p.name} priority />
+              <ProductImageGallery
+                images={getColorVariants(p).map((v) => v.image).filter(Boolean)}
+                alt={p.name}
+                priority
+              />
               <div>
                 <p className="text-xs uppercase tracking-wider text-store-muted">{p.collection}</p>
                 <h3 className="mt-1 font-display text-2xl font-bold">{p.name}</h3>
                 {discount > 0 && (
-                  <span className="mt-2 inline-block rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-white">
+                  <span className="mt-2 inline-block rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-store-bg">
                     {discount}% OFF
                   </span>
                 )}
@@ -199,7 +212,16 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
                     ))}
                   </div>
                 </div>
-                <p className="mt-4 text-sm text-store-muted">Colors: {p.colors.join(', ')}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {getColorVariants(p).map((v) => (
+                    <span
+                      key={v.name}
+                      className="rounded-full border border-store-border px-3 py-1 text-xs"
+                    >
+                      {v.name}
+                    </span>
+                  ))}
+                </div>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
                   {p.isHotSale && <span className="rounded-full bg-red-100 px-2 py-1">Hot Sale</span>}
                   {p.isOffer && <span className="rounded-full bg-amber-100 px-2 py-1">Offer</span>}
@@ -262,6 +284,20 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
                 value={form.sizeStock}
                 onChange={(sizeStock) => setForm({ ...form, sizeStock })}
               />
+              <ColorVariantEditor
+                variants={form.colorVariants}
+                onChange={(colorVariants) => {
+                  const synced = variantsToProductFields(colorVariants);
+                  setForm({
+                    ...form,
+                    colorVariants,
+                    images: synced.images,
+                  });
+                }}
+              />
+              <p className="text-xs text-store-muted">
+                Optional: extra gallery images (in addition to color photos)
+              </p>
               <ImageUploader
                 images={form.images}
                 onChange={(images) => setForm({ ...form, images })}

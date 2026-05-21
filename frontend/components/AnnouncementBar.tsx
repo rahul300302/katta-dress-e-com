@@ -21,7 +21,7 @@ export default function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="bg-store-text py-2 text-center text-xs font-medium tracking-wide text-white sm:text-sm">
+    <div className="bg-store-text py-2 text-center text-xs font-medium tracking-wide text-store-bg sm:text-sm">
       <span className="inline-flex items-center gap-2 px-4">
         <Truck className="h-3.5 w-3.5 shrink-0" />
         {text}

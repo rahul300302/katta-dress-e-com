@@ -134,7 +134,7 @@ export default function HeroCarousel({ slides: initialSlides }: Props) {
               <button
                 type="button"
                 onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)}
-                className="absolute left-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2 shadow md:flex"
+                className="absolute left-4 top-1/2 hidden -translate-y-1/2 rounded-full border border-store-border bg-store-bg p-2 text-store-text shadow md:flex"
                 aria-label="Previous"
               >
                 <ChevronLeft />
@@ -142,7 +142,7 @@ export default function HeroCarousel({ slides: initialSlides }: Props) {
               <button
                 type="button"
                 onClick={() => setIndex((i) => (i + 1) % slides.length)}
-                className="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2 shadow md:flex"
+                className="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full border border-store-border bg-store-bg p-2 text-store-text shadow md:flex"
                 aria-label="Next"
               >
                 <ChevronRight />

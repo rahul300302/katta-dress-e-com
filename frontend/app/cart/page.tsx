@@ -10,6 +10,7 @@ import api, { type CartData } from '@/services/api';
 import { formatPrice } from '@/lib/constants';
 import { useMounted } from '@/hooks/useMounted';
 import { useAuthStore } from '@/store/authStore';
+import { useCartStore } from '@/store/cartStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export default function CartPage() {
@@ -17,6 +18,7 @@ export default function CartPage() {
   const mounted = useMounted();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
   const { requireAuth } = useRequireAuth('/cart');
+  const refreshCartCount = useCartStore((s) => s.refresh);
   const [cart, setCart] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,12 +27,13 @@ export default function CartPage() {
       setLoading(false);
       return;
     }
+    refreshCartCount();
     api
       .get('/cart')
       .then((res) => setCart(res.data.data))
       .catch(() => setCart(null))
       .finally(() => setLoading(false));
-  }, [mounted, isAuthenticated]);
+  }, [mounted, isAuthenticated, refreshCartCount]);
 
   if (!mounted) {
     return (
@@ -41,11 +44,13 @@ export default function CartPage() {
   async function updateQty(itemId: string, quantity: number) {
     const res = await api.patch(`/cart/${itemId}`, { quantity });
     setCart(res.data.data);
+    await refreshCartCount();
   }
 
   async function removeItem(itemId: string) {
     const res = await api.delete(`/cart/${itemId}`);
     setCart(res.data.data);
+    await refreshCartCount();
   }
 
   function handleCheckout() {
@@ -102,7 +107,7 @@ export default function CartPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="flex gap-4 rounded-2xl border border-store-border p-4"
+              className="surface-card flex gap-4 p-4"
             >
               <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-store-faint">
                 <Image src={item.image} alt={item.name} fill className="object-cover" sizes="96px" />
@@ -156,7 +161,7 @@ export default function CartPage() {
               <dt>Subtotal</dt>
               <dd>{formatPrice(cart.subtotal)}</dd>
             </motion.div>
-            <div className="flex justify-between text-green-700">
+            <div className="flex justify-between text-green-600 dark:text-green-400">
               <dt>Discount</dt>
               <dd>-{formatPrice(cart.discount)}</dd>
             </div>

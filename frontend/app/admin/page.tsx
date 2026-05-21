@@ -12,6 +12,9 @@ import api, { type Product, type Order, type AppUser } from '@/services/api';
 import { formatPrice } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 import ImageUploader from '@/components/admin/ImageUploader';
+import ColorVariantEditor from '@/components/admin/ColorVariantEditor';
+import { variantsToProductFields } from '@/lib/colorVariants';
+import type { ColorVariant } from '@/lib/colorVariants';
 import SizeStockEditor from '@/components/admin/SizeStockEditor';
 import AdminProductModal, { type ProductFormData } from '@/components/admin/AdminProductModal';
 import type { SizeStockMap } from '@/lib/productStock';
@@ -39,7 +42,7 @@ export default function AdminPage() {
     collection: 'Essentials',
     sizeStock: { M: 10, L: 10, XL: 10 } as SizeStockMap,
     sizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
-    colors: ['Black'],
+    colorVariants: [{ name: 'Black', image: '' }] as ColorVariant[],
     images: [] as string[],
     isHotSale: false,
     isOffer: false,
@@ -65,8 +68,9 @@ export default function AdminPage() {
 
   async function handleCreateProduct(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.images.length) {
-      alert('Add at least one product image');
+    const synced = variantsToProductFields(form.colorVariants);
+    if (!synced.colorVariants.length) {
+      alert('Add at least one color with an image uploaded');
       return;
     }
     if (!Object.keys(form.sizeStock).length) {
@@ -80,8 +84,9 @@ export default function AdminPage() {
       offerPrice: form.offerPrice ? Number(form.offerPrice) : undefined,
       sizeStock: form.sizeStock,
       collection: form.collection,
-      colors: form.colors,
-      images: form.images,
+      colorVariants: synced.colorVariants,
+      colors: synced.colors,
+      images: synced.images.length ? synced.images : form.images,
       isHotSale: form.isHotSale,
       isOffer: form.isOffer,
       isNewArrival: form.isNewArrival,
@@ -97,6 +102,7 @@ export default function AdminPage() {
       price: '',
       offerPrice: '',
       sizeStock: { M: 10, L: 10, XL: 10 },
+      colorVariants: [{ name: 'Black', image: '' }],
       images: [],
     });
   }
@@ -114,6 +120,7 @@ export default function AdminPage() {
   }
 
   async function handleUpdateProduct(id: string, form: ProductFormData) {
+    const synced = variantsToProductFields(form.colorVariants);
     const res = await api.patch(`/products/${id}`, {
       name: form.name,
       description: form.description,
@@ -121,8 +128,9 @@ export default function AdminPage() {
       offerPrice: form.offerPrice ? Number(form.offerPrice) : undefined,
       sizeStock: form.sizeStock,
       collection: form.collection,
-      colors: form.colors,
-      images: form.images,
+      colorVariants: synced.colorVariants,
+      colors: synced.colors,
+      images: synced.images.length ? synced.images : form.images,
       isHotSale: form.isHotSale,
       isOffer: form.isOffer,
       isNewArrival: form.isNewArrival,
@@ -195,7 +203,7 @@ export default function AdminPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="rounded-2xl border border-store-border bg-white p-6"
+            className="surface-card p-6"
           >
             <Icon className="mb-2 h-5 w-5 text-store-muted" />
             <p className="text-2xl font-bold">{value}</p>
@@ -265,6 +273,17 @@ export default function AdminPage() {
             <SizeStockEditor
               value={form.sizeStock}
               onChange={(sizeStock) => setForm({ ...form, sizeStock })}
+            />
+            <ColorVariantEditor
+              variants={form.colorVariants}
+              onChange={(colorVariants) => {
+                const synced = variantsToProductFields(colorVariants);
+                setForm({
+                  ...form,
+                  colorVariants,
+                  images: synced.images.length ? synced.images : form.images,
+                });
+              }}
             />
             <ImageUploader images={form.images} onChange={(images) => setForm({ ...form, images })} />
             <input
@@ -415,7 +434,7 @@ export default function AdminPage() {
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${
-                        u.role === 'admin' ? 'bg-store-text text-white' : 'bg-gray-100'
+                        u.role === 'admin' ? 'bg-store-text text-store-bg' : 'bg-store-faint text-store-muted'
                       }`}
                     >
                       {u.role}

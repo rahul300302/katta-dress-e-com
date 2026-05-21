@@ -132,7 +132,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="KATTA on Instagram"
-              className="rounded-full border border-store-border p-2 transition hover:border-store-text hover:bg-white"
+              className="rounded-full border border-store-border p-2 text-store-text transition hover:border-store-text hover:bg-store-faint"
             >
               <Instagram className="h-4 w-4" />
             </a>
@@ -141,7 +141,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat on WhatsApp"
-              className="rounded-full border border-store-border p-2 transition hover:border-store-text hover:bg-white"
+              className="rounded-full border border-store-border p-2 text-store-text transition hover:border-store-text hover:bg-store-faint"
             >
               <MessageCircle className="h-4 w-4" />
             </a>
@@ -152,7 +152,7 @@ export default function Footer() {
                 openEmail();
               }}
               aria-label="Email KATTA"
-              className="rounded-full border border-store-border p-2 transition hover:border-store-text hover:bg-white"
+              className="rounded-full border border-store-border p-2 text-store-text transition hover:border-store-text hover:bg-store-faint"
             >
               <Mail className="h-4 w-4" />
             </a>

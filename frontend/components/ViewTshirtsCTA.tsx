@@ -25,7 +25,7 @@ export default function ViewTshirtsCTA({ products = [] }: Props) {
       : fallbackImages;
 
   return (
-    <section className="relative overflow-hidden border-y border-store-border bg-store-text py-16 text-white md:py-24">
+    <section className="relative overflow-hidden border-y border-store-border bg-neutral-950 py-16 text-white md:py-24">
       <motion.div
         aria-hidden
         className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/5 blur-3xl"
@@ -61,7 +61,7 @@ export default function ViewTshirtsCTA({ products = [] }: Props) {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/products" className="btn-primary !bg-white !text-store-text hover:!bg-store-faint">
+              <Link href="/products" className="btn-primary !bg-white !text-neutral-950 hover:!bg-neutral-100">
                 Shop All T-Shirts
                 <ArrowRight className="h-4 w-4" />
               </Link>

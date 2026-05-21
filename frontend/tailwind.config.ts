@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,12 +10,13 @@ const config: Config = {
     extend: {
       colors: {
         store: {
-          bg: '#ffffff',
-          text: '#121212',
-          border: '#e8e8e8',
-          faint: '#f7f7f7',
-          muted: '#6b6b6b',
-          accent: '#121212',
+          bg: 'var(--store-bg)',
+          text: 'var(--store-text)',
+          border: 'var(--store-border)',
+          faint: 'var(--store-faint)',
+          muted: 'var(--store-muted)',
+          accent: 'var(--store-accent)',
+          surface: 'var(--store-surface)',
         },
       },
       fontFamily: {
@@ -42,6 +44,7 @@ const config: Config = {
     },
   },
   plugins: [],
+  safelist: ['bg-store-surface', 'text-store-bg', 'text-store-text', 'bg-store-bg', 'bg-store-faint'],
 };
 
 export default config;

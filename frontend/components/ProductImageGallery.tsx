@@ -85,7 +85,7 @@ export default function ProductImageGallery({
               type="button"
               onClick={goPrev}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-store-text shadow-md transition hover:bg-white md:opacity-100"
+              className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-store-border bg-store-bg text-store-text shadow-md transition hover:bg-store-faint md:opacity-100"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -93,7 +93,7 @@ export default function ProductImageGallery({
               type="button"
               onClick={goNext}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-store-text shadow-md transition hover:bg-white md:opacity-100"
+              className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-store-border bg-store-bg text-store-text shadow-md transition hover:bg-store-faint md:opacity-100"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
