@@ -61,7 +61,7 @@ export default function ImageUploader({ images, onChange }: Props) {
               <button
                 type="button"
                 onClick={() => removeImage(url)}
-                className="absolute right-0.5 top-0.5 rounded-full bg-black/70 p-0.5 text-white opacity-0 transition group-hover:opacity-100"
+                className="absolute right-0.5 top-0.5 rounded-full bg-black/70 p-0.5 text-white transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 aria-label="Remove image"
               >
                 <X className="h-3 w-3" />

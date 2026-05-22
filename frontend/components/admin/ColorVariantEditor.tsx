@@ -68,23 +68,36 @@ export default function ColorVariantEditor({ variants, onChange }: Props) {
         {variants.map((variant, index) => (
           <div
             key={index}
-            className="flex flex-wrap items-start gap-3 rounded-xl border border-store-border bg-store-faint p-3"
+            className="relative flex flex-col gap-3 rounded-xl border border-store-border bg-store-faint p-3 sm:flex-row sm:items-start"
           >
-            <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg border border-store-border bg-store-faint">
-              {variant.image ? (
-                <Image src={variant.image} alt="" fill className="object-cover" sizes="64px" />
-              ) : (
-                <div className="flex h-full items-center justify-center text-[10px] text-store-muted">
-                  No img
-                </div>
-              )}
+            <div className="flex gap-3 items-center">
+              <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg border border-store-border bg-store-faint">
+                {variant.image ? (
+                  <Image src={variant.image} alt="" fill className="object-cover" sizes="64px" />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[10px] text-store-muted">
+                    No img
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1 sm:hidden">
+                <span className="text-xs font-semibold text-store-muted">Color variant #{index + 1}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeVariant(index)}
+                className="absolute top-2 right-2 rounded-lg p-2 text-red-600 hover:bg-red-50 sm:hidden"
+                aria-label="Remove color"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
-            <div className="min-w-0 flex-1 space-y-2">
+            <div className="min-w-0 flex-1 space-y-2 w-full">
               <input
                 value={variant.name}
                 onChange={(e) => updateVariant(index, { name: e.target.value })}
                 placeholder="Color name e.g. Red"
-                className="input-elegant !py-2 text-sm"
+                className="input-elegant !py-2 text-sm w-full"
               />
               <button
                 type="button"
@@ -106,7 +119,7 @@ export default function ColorVariantEditor({ variants, onChange }: Props) {
             <button
               type="button"
               onClick={() => removeVariant(index)}
-              className="rounded-lg p-2 text-red-600 hover:bg-red-50"
+              className="hidden sm:block rounded-lg p-2 text-red-600 hover:bg-red-50"
               aria-label="Remove color"
             >
               <Trash2 className="h-4 w-4" />
