@@ -169,10 +169,7 @@ export default function AdminPage() {
     }
   }
 
-  function openProductModal(product: Product, mode: 'view' | 'edit') {
-    setModalProduct(product);
-    setModalMode(mode);
-  }
+  
 
   async function handleUpdateProduct(id: string, form: ProductFormData) {
     try {
