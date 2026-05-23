@@ -24,7 +24,7 @@ const env = {
       process.env.GOOGLE_CALLBACK_URL ||
       (() => {
         const host =
-          process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+          process.env.VERCEL_PROJECT_PRODUCTION_URL || 'www.joinkatta.in';
         return host
           ? `https://${host}/api/auth/google/callback`
           : 'http://localhost:5000/api/auth/google/callback';
