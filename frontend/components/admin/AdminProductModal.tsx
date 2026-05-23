@@ -33,6 +33,8 @@ export interface ProductFormData {
   sizeStock: SizeStockMap;
   colorVariants: ColorVariant[];
   images: string[];
+  productUploadImages: string[];
+  colorBasedImages: string[];
   isHotSale: boolean;
   isOffer: boolean;
   isNewArrival: boolean;
@@ -52,6 +54,8 @@ function productToForm(p: Product): ProductFormData {
       ? getColorVariants(p)
       : [{ name: 'Black', image: p.images?.[0] || '' }],
     images: p.images || [],
+    productUploadImages: p.productUploadImages || [],
+    colorBasedImages: p.colorBasedImages || [],
     isHotSale: !!p.isHotSale,
     isOffer: !!p.isOffer,
     isNewArrival: !!p.isNewArrival,
