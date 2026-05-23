@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node backend/src/server.js",
-    "seed": "node backend/src/scripts/seed.js",
-    "vercel-build": "node -e \"require('./backend/src/config/pgDriver.cjs')\""
+    "start": "node src/server.js",
+    "seed": "node src/scripts/seed.js",
+    "vercel-build": "node -e \"require('./src/config/pgDriver.cjs')\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
