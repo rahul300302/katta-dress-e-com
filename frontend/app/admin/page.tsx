@@ -54,6 +54,8 @@ export default function AdminPage() {
     isNewArrival: false,
     isBestSeller: false,
   });
+  const [productsView, setProductsView] = useState<'create' | 'list'>('create');
+  const [productFilter, setProductFilter] = useState<'all' | 'hot' | 'offer' | 'new' | 'best' | 'others'>('all');
 
   useEffect(() => {
     if (!mounted) return;
@@ -122,7 +124,9 @@ export default function AdminPage() {
         collection: form.collection,
         colorVariants: synced.colorVariants,
         colors: synced.colors,
-        images: synced.images.length ? synced.images : form.images,
+        productUploadImages: form.images,
+        colorBasedImages: synced.images,
+        images: form.images,
         isHotSale: form.isHotSale,
         isOffer: form.isOffer,
         isNewArrival: form.isNewArrival,
@@ -183,7 +187,9 @@ export default function AdminPage() {
         collection: form.collection,
         colorVariants: synced.colorVariants,
         colors: synced.colors,
-        images: synced.images.length ? synced.images : form.images,
+        productUploadImages: form.images,
+        colorBasedImages: synced.images,
+        images: form.images,
         isHotSale: form.isHotSale,
         isOffer: form.isOffer,
         isNewArrival: form.isNewArrival,
@@ -317,7 +323,7 @@ export default function AdminPage() {
         ))}
       </div>
 
-      <div className="mt-10 flex overflow-x-auto flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0 gap-2 border-b border-store-border scrollbar-none">
+      <div className="mt-10 flex overflow-x-auto flex-nowrap px-0 gap-2 border-b border-store-border scrollbar-none">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -341,148 +347,178 @@ export default function AdminPage() {
       )}
 
       {tab === 'products' && (
-        <div className="mt-8 grid gap-10 lg:grid-cols-2">
-          <form onSubmit={handleCreateProduct} className="space-y-4 rounded-2xl border border-store-border p-4 sm:p-6">
-            <h2 className="flex items-center gap-2 font-semibold">
-              <Plus className="h-4 w-4" /> Add Product
-            </h2>
-            <input
-              required
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="input-elegant"
-            />
-            <textarea
-              placeholder="Description"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input-elegant min-h-[80px]"
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                required
-                type="number"
-                placeholder="Price ₹"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="input-elegant"
-              />
-              <input
-                type="number"
-                placeholder="Offer ₹"
-                value={form.offerPrice}
-                onChange={(e) => setForm({ ...form, offerPrice: e.target.value })}
-                className="input-elegant"
-              />
-            </div>
-            <SizeStockEditor
-              value={form.sizeStock}
-              onChange={(sizeStock) => setForm({ ...form, sizeStock })}
-            />
-            <ColorVariantEditor
-              variants={form.colorVariants}
-              onChange={(colorVariants) => {
-                const synced = variantsToProductFields(colorVariants);
-                setForm({
-                  ...form,
-                  colorVariants,
-                  images: synced.images.length ? synced.images : form.images,
-                });
-              }}
-            />
-            <ImageUploader images={form.images} onChange={(images) => setForm({ ...form, images })} />
-            <input
-              placeholder="Collection"
-              value={form.collection}
-              onChange={(e) => setForm({ ...form, collection: e.target.value })}
-              className="input-elegant"
-            />
-            <div className="flex flex-wrap gap-3 text-sm">
-              {(['isHotSale', 'isOffer', 'isNewArrival', 'isBestSeller'] as const).map((key) => (
-                <label key={key} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={form[key]}
-                    onChange={(e) => setForm({ ...form, [key]: e.target.checked })}
-                  />
-                  {key.replace('is', '')}
-                </label>
-              ))}
-            </div>
-            <button type="submit" className="btn-primary w-full">
+        <div className="mt-8">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setProductsView('create')}
+              className={`px-4 py-2 text-sm font-semibold rounded ${productsView === 'create' ? 'border-b-2 border-store-text' : 'text-store-muted'}`}
+            >
               Create Product
             </button>
-          </form>
-
-          <div className="space-y-3">
-            <h2 className="font-semibold text-store-muted">All Products ({products.length})</h2>
-            {loading ? (
-              <div className="text-center py-8 text-store-muted text-sm">
-                Loading products...
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center py-8 text-store-muted text-sm rounded-xl border border-store-border/50 p-4">
-                <p>No products found</p>
-                <p className="text-xs mt-1">Create a product using the form on the left</p>
-              </div>
-            ) : (
-              products.map((p) => (
-              <div key={p._id} className="flex flex-col gap-3 rounded-xl border border-store-border p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-store-faint">
-                    {p.images?.[0] ? (
-                      <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="56px" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-[10px] text-store-muted">
-                        No img
-                      </div>
-                    )}
-                    {p.images.length > 1 && (
-                      <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 text-[9px] text-white">
-                        +{p.images.length - 1}
-                      </span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-sm sm:text-base">{p.name}</p>
-                    <p className="text-xs text-store-muted sm:text-sm mt-0.5">
-                      {formatPrice(p.offerPrice || p.price)} ·{' '}
-                      {Object.entries(p.sizeStock || {})
-                        .map(([s, n]) => `${s}:${n}`)
-                        .join(' · ') || `Stock ${p.stock}`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2 justify-end items-center pt-2.5 border-t border-store-border/50 sm:pt-0 sm:border-0">
-                  <button
-                    type="button"
-                    onClick={() => openProductModal(p, 'view')}
-                    className="btn-secondary !px-2.5 !py-1.5 text-xs flex items-center gap-1"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    View
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openProductModal(p, 'edit')}
-                    className="btn-secondary !px-2.5 !py-1.5 text-xs flex items-center gap-1"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteProduct(p._id)}
-                    className="text-xs text-red-600 hover:underline px-2 py-1"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              ))
-            )}
+            <button
+              type="button"
+              onClick={() => setProductsView('list')}
+              className={`px-4 py-2 text-sm font-semibold rounded ${productsView === 'list' ? 'border-b-2 border-store-text' : 'text-store-muted'}`}
+            >
+              All Products
+            </button>
           </div>
+
+          {productsView === 'create' ? (
+            <div className="mt-6">
+              <form onSubmit={handleCreateProduct} className="space-y-4 rounded-2xl border border-store-border p-4 sm:p-6">
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <Plus className="h-4 w-4" /> Add Product
+                </h2>
+                <input
+                  required
+                  placeholder="Name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="input-elegant"
+                />
+                <textarea
+                  placeholder="Description"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="input-elegant min-h-[80px]"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    required
+                    type="number"
+                    placeholder="Price ₹"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    className="input-elegant"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Offer ₹"
+                    value={form.offerPrice}
+                    onChange={(e) => setForm({ ...form, offerPrice: e.target.value })}
+                    className="input-elegant"
+                  />
+                </div>
+                <SizeStockEditor
+                  value={form.sizeStock}
+                  onChange={(sizeStock) => setForm({ ...form, sizeStock })}
+                />
+                <ColorVariantEditor
+                  variants={form.colorVariants}
+                  onChange={(colorVariants) => setForm({ ...form, colorVariants })}
+                />
+                <ImageUploader images={form.images} onChange={(images) => setForm({ ...form, images })} />
+                <input
+                  placeholder="Collection"
+                  value={form.collection}
+                  onChange={(e) => setForm({ ...form, collection: e.target.value })}
+                  className="input-elegant"
+                />
+                <div className="flex flex-wrap gap-3 text-sm">
+                  {(['isHotSale', 'isOffer', 'isNewArrival', 'isBestSeller'] as const).map((key) => (
+                    <label key={key} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={form[key]}
+                        onChange={(e) => setForm({ ...form, [key]: e.target.checked })}
+                      />
+                      {key.replace('is', '')}
+                    </label>
+                  ))}
+                </div>
+                <button type="submit" className="btn-primary w-full">
+                  Create Product
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="mt-6">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-store-muted">All Products ({products.length})</h2>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={productFilter}
+                    onChange={(e) => setProductFilter(e.target.value as any)}
+                    className="input-elegant text-sm"
+                  >
+                    <option value="all">All</option>
+                    <option value="hot">Hot Sale</option>
+                    <option value="offer">Offer</option>
+                    <option value="new">New Arrival</option>
+                    <option value="best">Best Seller</option>
+                    <option value="others">Others</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-3 mt-4">
+                {loading ? (
+                  <div className="text-center py-8 text-store-muted text-sm">Loading products...</div>
+                ) : (
+                  (() => {
+                    const filtered = products.filter((p) => {
+                      switch (productFilter) {
+                        case 'hot':
+                          return !!p.isHotSale;
+                        case 'offer':
+                          return !!p.isOffer;
+                        case 'new':
+                          return !!p.isNewArrival;
+                        case 'best':
+                          return !!p.isBestSeller;
+                        case 'others':
+                          return !p.isHotSale && !p.isOffer && !p.isNewArrival && !p.isBestSeller;
+                        default:
+                          return true;
+                      }
+                    });
+
+                    if (!filtered.length) {
+                      return (
+                        <div className="text-center py-8 text-store-muted text-sm rounded-xl border border-store-border/50 p-4">
+                          <p>No products found</p>
+                        </div>
+                      );
+                    }
+
+                    return filtered.map((p) => (
+                      <div key={p._id} className="flex flex-col gap-3 rounded-xl border border-store-border p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-store-faint">
+                            {p.images?.[0] ? (
+                              <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="56px" />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-[10px] text-store-muted">No img</div>
+                            )}
+                            {p.images.length > 1 && (
+                              <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 text-[9px] text-white">+{p.images.length - 1}</span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-semibold text-sm sm:text-base">{p.name}</p>
+                            <p className="text-xs text-store-muted sm:text-sm mt-0.5">
+                              {formatPrice(p.offerPrice || p.price)} ·{' '}
+                              {Object.entries(p.sizeStock || {}).map(([s, n]) => `${s}:${n}`).join(' · ') || `Stock ${p.stock}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end items-center pt-2.5 border-t border-store-border/50 sm:pt-0 sm:border-0">
+                          <button type="button" onClick={() => openProductModal(p, 'view')} className="btn-secondary !px-2.5 !py-1.5 text-xs flex items-center gap-1">
+                            <Eye className="h-3.5 w-3.5" /> View
+                          </button>
+                          <button type="button" onClick={() => openProductModal(p, 'edit')} className="btn-secondary !px-2.5 !py-1.5 text-xs flex items-center gap-1">
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </button>
+                          <button type="button" onClick={() => deleteProduct(p._id)} className="text-xs text-red-600 hover:underline px-2 py-1">Delete</button>
+                        </div>
+                      </div>
+                    ));
+                  })()
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -524,7 +560,7 @@ export default function AdminPage() {
 
       {tab === 'users' && (
         <div className="mt-8 overflow-x-auto rounded-2xl border border-store-border">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full md:min-w-[640px] text-left text-sm">
             <thead className="border-b border-store-border bg-store-faint">
               <tr>
                 <th className="px-4 py-3 font-semibold">User</th>

@@ -100,7 +100,9 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
       await onSave(product._id, {
         ...form,
         colorVariants: synced.colorVariants,
-        images: synced.images.length ? synced.images : form.images,
+        productUploadImages: form.images,
+        colorBasedImages: synced.images,
+        images: form.images,
       });
       onClose();
     } catch {
@@ -190,7 +192,7 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
           {activeMode === 'view' ? (
             <div className="grid gap-8 md:grid-cols-2">
               <ProductImageGallery
-                images={getColorVariants(p).map((v) => v.image).filter(Boolean)}
+                images={(p.images && p.images.length) ? p.images : getColorVariants(p).map((v) => v.image).filter(Boolean)}
                 alt={p.name}
                 priority
               />
@@ -222,14 +224,17 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
                     ))}
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2 items-center">
                   {getColorVariants(p).map((v) => (
-                    <span
-                      key={v.name}
-                      className="rounded-full border border-store-border px-3 py-1 text-xs"
-                    >
-                      {v.name}
-                    </span>
+                    <div key={v.name} className="flex items-center gap-2 rounded-full border border-store-border px-3 py-1 text-xs">
+                      {v.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={v.image} alt={v.name} className="h-6 w-6 rounded" />
+                      ) : (
+                        <div className="h-6 w-6 rounded bg-store-faint" />
+                      )}
+                      <span className="text-xs">{v.name}</span>
+                    </div>
                   ))}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
@@ -297,11 +302,9 @@ export default function AdminProductModal({ product, mode, open, onClose, onSave
               <ColorVariantEditor
                 variants={form.colorVariants}
                 onChange={(colorVariants) => {
-                  const synced = variantsToProductFields(colorVariants);
                   setForm({
                     ...form,
                     colorVariants,
-                    images: synced.images,
                   });
                 }}
               />

@@ -57,18 +57,33 @@ function parseProductBody(body) {
   const sizes = Object.keys(sizeStock);
   const stock = Object.values(sizeStock).reduce((sum, n) => sum + n, 0);
 
+  const productUploadImages = Array.isArray(body.productUploadImages)
+    ? body.productUploadImages
+    : Array.isArray(body.images)
+      ? body.images
+      : [];
+  const colorBasedImages = Array.isArray(body.colorBasedImages) ? body.colorBasedImages : [];
   let colorVariants = normalizeColorVariants(body.colorVariants);
-  let images = body.images || [];
-  let colors = body.colors || [];
+  let colors = Array.isArray(body.colors) ? body.colors : [];
 
-  if (colorVariants.length) {
+  if (!colorVariants.length && colorBasedImages.length && colors.length) {
+    colorVariants = colors
+      .map((name, i) => ({
+        name: String(name).trim(),
+        image: String(colorBasedImages[i] || colorBasedImages[0] || '').trim(),
+      }))
+      .filter((v) => v.name && v.image);
+  } else if (!colorVariants.length && colorBasedImages.length) {
+    colorVariants = colorBasedImages
+      .map((image, i) => ({
+        name: `Color ${i + 1}`,
+        image: String(image).trim(),
+      }))
+      .filter((v) => v.image);
+  }
+
+  if (colorVariants.length && !colors.length) {
     colors = colorVariants.map((v) => v.name);
-    images = colorVariants.map((v) => v.image);
-  } else if (colors.length && images.length) {
-    colorVariants = colors.map((name, i) => ({
-      name: String(name).trim(),
-      image: images[i] || images[0] || '',
-    }));
   }
 
   return {
@@ -78,7 +93,7 @@ function parseProductBody(body) {
     sizeStock,
     sizes,
     stock,
-    images,
+    images: productUploadImages,
     colors,
     colorVariants,
     isHotSale: Boolean(body.isHotSale),
@@ -92,6 +107,10 @@ function numericFields(p) {
   const row = normalizeProductRecord(toApi(p));
   row.price = Number(row.price);
   if (row.offerPrice != null) row.offerPrice = Number(row.offerPrice);
+  row.productUploadImages = Array.isArray(row.images) ? row.images : [];
+  row.colorBasedImages = Array.isArray(row.colorVariants)
+    ? row.colorVariants.map((v) => v?.image).filter(Boolean)
+    : [];
   return row;
 }
 
@@ -100,34 +119,52 @@ export async function listProducts(req, res, next) {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(48, Math.max(1, Number(req.query.limit) || 12));
     const where = buildWhere(req.query);
+    // Optimize common case: when no size/color/min/max filters are present,
+    // delegate pagination and filtering to the DB to avoid loading entire table.
+    let total = 0;
+    let pageRows = [];
 
-    let products = await Product.findAll({
-      where,
-      order: buildOrder(req.query.sort),
-    });
+    const hasComplexFilter = req.query.size || req.query.color || req.query.minPrice || req.query.maxPrice || req.query.inStock;
 
-    if (req.query.size) {
-      const size = req.query.size;
-      products = products.filter((p) => productOffersSize(p, size));
-      if (req.query.inStock === 'true') {
-        products = products.filter((p) => stockForSize(p, size) > 0);
+    if (!hasComplexFilter) {
+      const offset = (page - 1) * limit;
+      const { count, rows } = await Product.findAndCountAll({
+        where,
+        order: buildOrder(req.query.sort),
+        limit,
+        offset,
+      });
+      total = Number(count || 0);
+      pageRows = (rows || []).map(numericFields);
+    } else {
+      // Fallback: apply complex filters in-memory while still avoiding accidental huge responses
+      // by limiting the maximum items fetched.
+      const MAX_FETCH = 2000;
+      let products = await Product.findAll({ where, order: buildOrder(req.query.sort), limit: MAX_FETCH });
+
+      if (req.query.size) {
+        const size = req.query.size;
+        products = products.filter((p) => productOffersSize(p, size));
+        if (req.query.inStock === 'true') {
+          products = products.filter((p) => stockForSize(p, size) > 0);
+        }
       }
-    }
-    if (req.query.color) {
-      products = products.filter((p) => (p.colors || []).includes(req.query.color));
-    }
-    if (req.query.minPrice) {
-      const min = Number(req.query.minPrice);
-      products = products.filter((p) => getEffective(p) >= min);
-    }
-    if (req.query.maxPrice) {
-      const max = Number(req.query.maxPrice);
-      products = products.filter((p) => getEffective(p) <= max);
-    }
+      if (req.query.color) {
+        products = products.filter((p) => (p.colors || []).includes(req.query.color));
+      }
+      if (req.query.minPrice) {
+        const min = Number(req.query.minPrice);
+        products = products.filter((p) => getEffective(p) >= min);
+      }
+      if (req.query.maxPrice) {
+        const max = Number(req.query.maxPrice);
+        products = products.filter((p) => getEffective(p) <= max);
+      }
 
-    const total = products.length;
-    const start = (page - 1) * limit;
-    const pageRows = products.slice(start, start + limit).map(numericFields);
+      total = products.length;
+      const start = (page - 1) * limit;
+      pageRows = products.slice(start, start + limit).map(numericFields);
+    }
 
     res.json({
       success: true,

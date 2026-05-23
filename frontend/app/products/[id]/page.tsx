@@ -5,11 +5,7 @@ import type { Product } from '@/services/api';
 
 async function getProduct(id: string): Promise<Product | null> {
   try {
-    console.log(id, 'id');
-
     const res = await serverApi.get(`/products/${id}`);
-
-    console.log(res.data, 'FULL RESPONSE');
 
     return res.data?.data || null;
   } catch (error: any) {
@@ -39,8 +35,6 @@ export default async function ProductPage({
   params: { id: string };
 }) {
   const product = await getProduct(params.id);
-
-  console.log(product, 'productproduct', params.id);
 
   if (!product) {
     return (

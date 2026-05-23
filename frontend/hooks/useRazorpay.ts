@@ -23,6 +23,10 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
+export async function preloadRazorpay(): Promise<boolean> {
+  return loadRazorpayScript();
+}
+
 export function useRazorpay() {
   const pay = useCallback(
     async (options: {

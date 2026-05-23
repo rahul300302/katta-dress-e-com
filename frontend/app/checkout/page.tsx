@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import api, { type CartData, type DeliveryAddress, type Order } from '@/services/api';
 import { formatPrice, BRAND } from '@/lib/constants';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import { useRazorpay } from '@/hooks/useRazorpay';
+import { useRazorpay, preloadRazorpay } from '@/hooks/useRazorpay';
 import { useCartStore } from '@/store/cartStore';
 
 export default function CheckoutPage() {
@@ -31,6 +31,12 @@ export default function CheckoutPage() {
       return;
     }
     api.get('/cart').then((res) => setCart(res.data.data)).catch(() => setCart(null));
+
+    // Preload Razorpay script early to reduce delay when user clicks pay
+    // Don't block rendering on this; fire-and-forget
+    preloadRazorpay().catch(() => {
+      /* ignore preload errors */
+    });
   }, [isAuthenticated, requireAuth]);
 
   function updateField(field: keyof DeliveryAddress, value: string) {
@@ -187,7 +193,15 @@ export default function CheckoutPage() {
             disabled={loading || !cart?.items?.length}
             className="btn-primary mt-6 w-full"
           >
-            {loading ? 'Processing...' : 'Pay with Razorpay'}
+            <span className="flex items-center justify-center gap-3">
+              {loading && (
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              )}
+              {loading ? 'Processing...' : !cart ? 'Loading...' : !cart.items?.length ? 'Cart empty' : 'Pay with Razorpay'}
+            </span>
           </motion.button>
           <p className="mt-3 text-center text-xs text-store-muted">Secured by Razorpay</p>
         </motion.div>

@@ -24,6 +24,8 @@ export const productSchema = Joi.object({
   name: Joi.string().min(2).required(),
   description: Joi.string().allow(''),
   images: Joi.array().items(Joi.string().uri()),
+  productUploadImages: Joi.array().items(Joi.string().uri()),
+  colorBasedImages: Joi.array().items(Joi.string().uri()),
   price: Joi.number().min(0).required(),
   offerPrice: Joi.number().min(0).allow(null),
   category: Joi.string().default('T-Shirt'),
