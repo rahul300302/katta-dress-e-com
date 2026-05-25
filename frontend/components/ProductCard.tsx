@@ -7,7 +7,7 @@ import { useState } from 'react';
 import type { Product } from '@/services/api';
 import { formatPrice, getDiscountPercent } from '@/lib/constants';
 import { isOutOfStockForFilter, normalizeProduct } from '@/lib/productStock';
-import { getColorVariants } from '@/lib/colorVariants';
+import { getDisplayImages } from '@/lib/colorVariants';
 
 interface Props {
   product: Product;
@@ -28,9 +28,7 @@ export default function ProductCard({
   const discount = getDiscountPercent(p.price, p.offerPrice);
   const outOfStockOnCard = isOutOfStockForFilter(p, filterSize || undefined);
   
-  // Get all unique images from colorVariants and main images
-  const colorVariantImages = getColorVariants(p).map(v => v.image).filter(Boolean);
-  const allImages = [...new Set([...colorVariantImages, ...(p.images || [])])].filter(Boolean);
+  const allImages = getDisplayImages(p);
   const thumb = allImages[0] || '/placeholder.jpg';
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
