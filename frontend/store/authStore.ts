@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { DeliveryAddress } from '@/services/api';
 
 export interface ApiUser {
   id: string;
@@ -9,6 +10,7 @@ export interface ApiUser {
   email: string;
   avatar: string;
   role: 'user' | 'admin';
+  addresses?: DeliveryAddress[];
 }
 
 interface AuthState {

@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import api, { type CartData, type DeliveryAddress, type Order } from '@/services/api';
+import { Loader2, MapPin, RotateCcw, Save } from 'lucide-react';
+import { sanitizeAddress } from '@/lib/addressUtils';
+import api, { type CartData, type Order } from '@/services/api';
 import { formatPrice, BRAND } from '@/lib/constants';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useRazorpay, preloadRazorpay } from '@/hooks/useRazorpay';
 import { useCartStore } from '@/store/cartStore';
+import { useDeliveryAddress } from '@/hooks/useDeliveryAddress';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -15,33 +18,42 @@ export default function CheckoutPage() {
   const { pay } = useRazorpay();
   const [cart, setCart] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<DeliveryAddress>({
-    name: '',
-    phone: '',
-    email: '',
-    street: '',
-    city: '',
-    state: 'Tamil Nadu',
-    pincode: '',
-  });
+
+  const {
+    form,
+    updateField,
+    addressSource,
+    loadingAddress,
+    locationLoading,
+    locationError,
+    locationPreview,
+    hasSavedAddress,
+    savingAddress,
+    applySavedAddress,
+    useCurrentLocation,
+    saveAddressToProfile,
+  } = useDeliveryAddress(isAuthenticated);
+
+  const fetchCart = useCartStore((s) => s.fetchCart);
 
   useEffect(() => {
     if (!isAuthenticated) {
       requireAuth('checkout');
       return;
     }
-    api.get('/cart').then((res) => setCart(res.data.data)).catch(() => setCart(null));
-
-    // Preload Razorpay script early to reduce delay when user clicks pay
-    // Don't block rendering on this; fire-and-forget
-    preloadRazorpay().catch(() => {
-      /* ignore preload errors */
-    });
-  }, [isAuthenticated, requireAuth]);
-
-  function updateField(field: keyof DeliveryAddress, value: string) {
-    setForm((f) => ({ ...f, [field]: value }));
-  }
+    let cancelled = false;
+    fetchCart()
+      .then((data) => {
+        if (!cancelled) setCart(data);
+      })
+      .catch(() => {
+        if (!cancelled) setCart(null);
+      });
+    preloadRazorpay().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, fetchCart]);
 
   async function handlePayment(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +62,7 @@ export default function CheckoutPage() {
 
     try {
       const orderRes = await api.post<{ success: boolean; data: Order }>('/orders', {
-        deliveryAddress: form,
+        deliveryAddress: sanitizeAddress(form),
       });
       const order = orderRes.data.data;
 
@@ -73,7 +85,6 @@ export default function CheckoutPage() {
             razorpaySignature: response.razorpay_signature,
           });
           const finalized = verifyRes.data.data;
-          // Clear frontend cart state instantly
           useCartStore.getState().clear();
           router.push(
             `/order/success?id=${finalized._id}&paymentId=${response.razorpay_payment_id}`
@@ -100,9 +111,81 @@ export default function CheckoutPage() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-4 rounded-2xl border border-store-border p-6"
+          className="surface-card space-y-4 p-6"
         >
-          <h2 className="font-semibold">Delivery Address</h2>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold text-store-text">Delivery Address</h2>
+              {loadingAddress && !form.street ? (
+                <p className="mt-1 text-sm text-store-muted">Loading your saved address...</p>
+              ) : addressSource === 'saved' ? (
+                <p className="mt-1 text-sm text-green-600 dark:text-green-400">
+                  Filled from your saved address. You can edit any field below.
+                </p>
+              ) : addressSource === 'location' ? (
+                <p className="mt-1 text-sm text-green-600 dark:text-green-400">
+                  Street, city and pincode filled from your current location.
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-store-muted">
+                  Enter your address or use the buttons below to auto-fill.
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {hasSavedAddress && (
+                <button
+                  type="button"
+                  onClick={applySavedAddress}
+                  disabled={loadingAddress}
+                  className="btn-secondary flex items-center gap-1.5 !px-3 !py-2 text-xs"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Saved address
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+                disabled={locationLoading || loadingAddress}
+                className="btn-secondary flex items-center gap-1.5 !px-3 !py-2 text-xs"
+              >
+                {locationLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <MapPin className="h-3.5 w-3.5" />
+                )}
+                {locationLoading ? 'Locating...' : 'Use current location'}
+              </button>
+            </div>
+          </div>
+
+          {locationPreview && !locationError && (
+            <p className="rounded-xl border border-store-border bg-store-faint px-4 py-3 text-sm text-store-muted">
+              {locationPreview}
+            </p>
+          )}
+
+          {locationError && (
+            <p className="rounded-xl border border-red-500/30 bg-store-faint px-4 py-3 text-sm text-red-500">
+              {locationError}
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={() => saveAddressToProfile()}
+            disabled={savingAddress || loadingAddress}
+            className="btn-secondary flex w-full items-center justify-center gap-2 text-sm sm:w-auto"
+          >
+            {savingAddress ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {savingAddress ? 'Saving...' : 'Save this address to my profile'}
+          </button>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <input
               required
@@ -165,17 +248,17 @@ export default function CheckoutPage() {
           animate={{ opacity: 1, x: 0 }}
           className="h-fit rounded-2xl border border-store-border bg-store-faint p-6"
         >
-          <h2 className="font-semibold">Order Summary</h2>
+          <h2 className="font-semibold text-store-text">Order Summary</h2>
           {cart && (
-            <dl className="mt-4 space-y-2 text-sm">
+            <dl className="mt-4 space-y-2 text-sm text-store-text">
               <div className="flex justify-between">
                 <dt>Subtotal</dt>
                 <dd>{formatPrice(cart.subtotal)}</dd>
               </div>
-              <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 300 }} className="flex justify-between text-green-700">
+              <div className="flex justify-between text-green-600 dark:text-green-400">
                 <dt>Discount</dt>
                 <dd>-{formatPrice(cart.discount)}</dd>
-              </motion.div>
+              </div>
               <div className="flex justify-between">
                 <dt>Delivery</dt>
                 <dd>{formatPrice(cart.deliveryCharge)}</dd>
@@ -200,7 +283,13 @@ export default function CheckoutPage() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
               )}
-              {loading ? 'Processing...' : !cart ? 'Loading...' : !cart.items?.length ? 'Cart empty' : 'Pay with Razorpay'}
+              {loading
+                ? 'Processing...'
+                : !cart
+                  ? 'Loading...'
+                  : !cart.items?.length
+                    ? 'Cart empty'
+                    : 'Pay with Razorpay'}
             </span>
           </motion.button>
           <p className="mt-3 text-center text-xs text-store-muted">Secured by Razorpay</p>

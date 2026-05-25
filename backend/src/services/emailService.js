@@ -161,6 +161,18 @@ export function buildOrderConfirmedEmail({ order, items, customerName, forStore 
 
 export function buildOrderShippedEmail({ order, items, customerName }) {
   const orderId = String(order.id);
+  const trackingCarrier = order.trackingCarrier || '';
+  const trackingNumber = order.trackingNumber || '';
+  const trackingUrl = order.trackingUrl || '';
+  const trackingHtml = trackingCarrier || trackingNumber || trackingUrl
+    ? `<div style="margin-top:18px;padding:16px;background:#f9f9f9;border:1px solid #eee;border-radius:10px;">
+         <p style="margin:0 0 8px;font-weight:600;">Shipment details</p>
+         ${trackingCarrier ? `<p style="margin:0;">Carrier: ${escapeHtml(trackingCarrier)}</p>` : ''}
+         ${trackingNumber ? `<p style="margin:0;">Tracking number: ${escapeHtml(trackingNumber)}</p>` : ''}
+         ${trackingUrl ? `<p style="margin:0;">Track online: <a href="${escapeHtml(trackingUrl)}">${escapeHtml(trackingUrl)}</a></p>` : ''}
+       </div>`
+    : '';
+
   const body = `
     <p>Hi ${customerName || 'there'},</p>
     <p>Your KATTA order <strong>#${orderId}</strong> has been shipped and is on its way to you.</p>
@@ -170,28 +182,30 @@ export function buildOrderShippedEmail({ order, items, customerName }) {
       Delivery: ${formatInr(order.deliveryCharge)}<br/>
       <strong>Total: ${formatInr(order.totalAmount)}</strong>
     </p>
-    <p>We will notify you when your order is delivered.</p>
+    ${trackingHtml}
+    <p style="margin-top:16px;">We will notify you when your order is delivered.</p>
     <p style="margin-top:16px;">Thank you for shopping with KATTA.</p>
   `;
   const html = emailLayout('Your order has shipped', body);
-  const text = [
+
+  const textParts = [
     `Hi ${customerName || 'there'},`,
     '',
     `Your KATTA order #${orderId} has been shipped and is on its way.`,
     '',
     `Order total: ${formatInr(order.totalAmount)}`,
-    '',
-    'We will notify you when your order is delivered.',
-    '',
-    'Thank you for shopping with KATTA.',
-    '',
-    `Questions? Email ${env.storeEmail || 'kattaclothings@gmail.com'}`,
-  ].join('\n');
+  ];
+
+  if (trackingCarrier) textParts.push('', `Carrier: ${trackingCarrier}`);
+  if (trackingNumber) textParts.push(`Tracking number: ${trackingNumber}`);
+  if (trackingUrl) textParts.push(`Track online: ${trackingUrl}`);
+
+  textParts.push('', 'We will notify you when your order is delivered.', '', 'Thank you for shopping with KATTA.', '', `Questions? Email ${env.storeEmail || 'kattaclothings@gmail.com'}`);
 
   return {
     subject: `Your KATTA order #${orderId} has shipped`,
     html,
-    text,
+    text: textParts.join('\n'),
   };
 }
 

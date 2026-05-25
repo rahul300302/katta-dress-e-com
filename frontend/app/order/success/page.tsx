@@ -82,7 +82,7 @@ function SuccessContent() {
                   <p className="text-sm font-semibold">{formatPrice(item.price * item.quantity)}</p>
                 </div>
               </div>
-            ))}}
+            ))}
           </div>
         )}
 

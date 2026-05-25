@@ -10,6 +10,7 @@ const User = sequelize.define(
     googleId: { type: DataTypes.STRING, allowNull: false, unique: true },
     avatar: { type: DataTypes.STRING, defaultValue: '' },
     role: { type: DataTypes.ENUM('user', 'admin'), defaultValue: 'user' },
+    addresses: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
   },
   { tableName: 'users', timestamps: true }
 );
@@ -73,6 +74,9 @@ const Order = sequelize.define(
     paymentMethod: { type: DataTypes.STRING, defaultValue: 'razorpay' },
     razorpayOrderId: { type: DataTypes.STRING },
     razorpayPaymentId: { type: DataTypes.STRING },
+    trackingCarrier: { type: DataTypes.STRING, allowNull: true },
+    trackingNumber: { type: DataTypes.STRING, allowNull: true },
+    trackingUrl: { type: DataTypes.STRING, allowNull: true },
     paymentStatus: {
       type: DataTypes.ENUM('pending', 'paid', 'failed'),
       defaultValue: 'pending',
@@ -124,10 +128,38 @@ OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 export { User, Product, Cart, CartItem, Order, OrderItem, SiteSetting, sequelize };
 
 export async function syncDatabase() {
-  // Skip schema sync on Vercel — cold starts would run ALTER on every instance.
-  if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
-    return;
-  }
   await sequelize.sync({ alter: true });
+
+  await sequelize.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name = 'addresses'
+      ) THEN
+        ALTER TABLE users ADD COLUMN addresses JSONB NOT NULL DEFAULT '[]';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'orders' AND column_name = 'trackingCarrier'
+      ) THEN
+        ALTER TABLE orders ADD COLUMN "trackingCarrier" VARCHAR;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'orders' AND column_name = 'trackingNumber'
+      ) THEN
+        ALTER TABLE orders ADD COLUMN "trackingNumber" VARCHAR;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'orders' AND column_name = 'trackingUrl'
+      ) THEN
+        ALTER TABLE orders ADD COLUMN "trackingUrl" VARCHAR;
+      END IF;
+    END $$;
+  `);
+
   console.log('Database tables synced');
 }

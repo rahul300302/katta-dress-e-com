@@ -18,7 +18,8 @@ export default function CartPage() {
   const mounted = useMounted();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
   const { requireAuth } = useRequireAuth('/cart');
-  const refreshCartCount = useCartStore((s) => s.refresh);
+  const fetchCart = useCartStore((s) => s.fetchCart);
+  const setFromCart = useCartStore((s) => s.setFromCart);
   const [cart, setCart] = useState<CartData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,13 +28,23 @@ export default function CartPage() {
       setLoading(false);
       return;
     }
-    refreshCartCount();
-    api
-      .get('/cart')
-      .then((res) => setCart(res.data.data))
-      .catch(() => setCart(null))
-      .finally(() => setLoading(false));
-  }, [mounted, isAuthenticated, refreshCartCount]);
+    let cancelled = false;
+    fetchCart()
+      .then((data) => {
+        if (cancelled) return;
+        setCart(data);
+        if (data) setFromCart(data);
+      })
+      .catch(() => {
+        if (!cancelled) setCart(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [mounted, isAuthenticated, fetchCart, setFromCart]);
 
   if (!mounted) {
     return (
@@ -43,14 +54,16 @@ export default function CartPage() {
 
   async function updateQty(itemId: string, quantity: number) {
     const res = await api.patch(`/cart/${itemId}`, { quantity });
-    setCart(res.data.data);
-    await refreshCartCount();
+    const data = res.data.data;
+    setCart(data);
+    setFromCart(data);
   }
 
   async function removeItem(itemId: string) {
     const res = await api.delete(`/cart/${itemId}`);
-    setCart(res.data.data);
-    await refreshCartCount();
+    const data = res.data.data;
+    setCart(data);
+    setFromCart(data);
   }
 
   function handleCheckout() {

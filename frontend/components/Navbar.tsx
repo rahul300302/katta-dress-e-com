@@ -70,7 +70,6 @@ export default function Navbar() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
   const itemCount = useCartStore((s) => s.itemCount);
   const bumpKey = useCartStore((s) => s.bumpKey);
-  const refreshCart = useCartStore((s) => s.refresh);
   const clearCart = useCartStore((s) => s.clear);
 
   const showUser = mounted && user;
@@ -81,11 +80,6 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  useEffect(() => {
-    if (mounted && isAuthenticated) refreshCart();
-    else if (mounted) clearCart();
-  }, [mounted, isAuthenticated, refreshCart, clearCart]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -197,19 +191,19 @@ export default function Navbar() {
               >
                 <Package className="h-5 w-5" />
               </Link>
-              {user.avatar && !avatarError ? (
-                <img
-                  src={user.avatar}
-                  alt=""
-                  title={user.name || "User Profile"}
-                  onError={() => setAvatarError(true)}
-                  className="h-9 w-9 rounded-full border border-store-border object-cover"
-                />
-              ) : (
-                <span className={iconBtn} title={user.name || "User Profile"}>
+              <Link href="/account/profile" className={iconBtn} title="My Profile" aria-label="My Profile">
+                {user.avatar && !avatarError ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name || 'User Profile'}
+                    title={user.name || 'User Profile'}
+                    onError={() => setAvatarError(true)}
+                    className="h-9 w-9 rounded-full border border-store-border object-cover"
+                  />
+                ) : (
                   <User className="h-5 w-5" />
-                </span>
-              )}
+                )}
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -295,6 +289,14 @@ export default function Navbar() {
               >
                 <Package className="h-4 w-4" />
                 My Orders
+              </Link>
+              <Link
+                href="/account/profile"
+                onClick={() => setDrawerOpen(false)}
+                className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-store-text hover:bg-store-faint"
+              >
+                <User className="h-4 w-4" />
+                My Profile
               </Link>
               {showAdmin && (
                 <Link

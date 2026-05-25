@@ -140,12 +140,17 @@ export async function getAllOrders(_req, res, next) {
 
 export async function updateOrderStatus(req, res, next) {
   try {
-    const { orderStatus } = req.body;
+    const { orderStatus, trackingCarrier, trackingNumber, trackingUrl } = req.body;
     const order = await Order.findByPk(req.params.id);
     if (!order) throw new AppError('Order not found', 404);
 
     const previousStatus = order.orderStatus;
-    await order.update({ orderStatus });
+    await order.update({
+      orderStatus,
+      trackingCarrier: trackingCarrier || order.trackingCarrier,
+      trackingNumber: trackingNumber || order.trackingNumber,
+      trackingUrl: trackingUrl || order.trackingUrl,
+    });
 
     if (orderStatus === 'confirmed' && previousStatus !== 'confirmed') {
       await sendOrderConfirmedEmails(order);
