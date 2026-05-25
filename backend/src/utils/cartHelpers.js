@@ -18,14 +18,35 @@ export async function populateCartItems(cartItems) {
   for (const item of cartItems) {
     const product = await Product.findByPk(item.productId);
     if (!product) continue;
+    
     const p = normalizeProductRecord(toApi(product));
-    const images = p.images || [];
+    
+    // Priority: images > colorVariants
+    let images = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
+    let image = images[0] || '';
+    
+    // Fallback to colorVariants if no direct images
+    if (!image && Array.isArray(p.colorVariants) && p.colorVariants.length > 0) {
+      const colorImages = p.colorVariants
+        .map(v => v?.image)
+        .filter(Boolean);
+      if (colorImages.length > 0) {
+        image = colorImages[0];
+        images = colorImages;
+      }
+    }
+    
+    // If still no image, log for debugging but continue gracefully
+    if (!image) {
+      console.warn(`[Cart] Product ${item.productId} (${p.name}) has no images or colorVariants`);
+    }
+    
     populated.push({
       _id: String(item.id),
       productId: String(product.id),
       name: p.name,
-      image: images[0] || '',
-      images,
+      image: image,
+      images: images,
       size: item.size,
       quantity: item.quantity,
       price: Number(item.price),
@@ -70,14 +91,18 @@ export async function validateCartStock(cartItems) {
 
 export function formatOrder(order, items = []) {
   const o = toApi(order);
-  o.items = items.map((i) => ({
-    productId: String(i.productId),
-    name: i.name,
-    image: i.image,
-    size: i.size,
-    quantity: i.quantity,
-    price: Number(i.price),
-  }));
+  o.items = items.map((i) => {
+    // Ensure image is never empty - use a fallback
+    const image = i.image || '';
+    return {
+      productId: String(i.productId),
+      name: i.name,
+      image: image,
+      size: i.size,
+      quantity: i.quantity,
+      price: Number(i.price),
+    };
+  });
   o.subtotal = Number(o.subtotal);
   o.discount = Number(o.discount);
   o.deliveryCharge = Number(o.deliveryCharge);

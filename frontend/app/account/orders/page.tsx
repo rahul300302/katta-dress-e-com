@@ -95,10 +95,12 @@ export default function MyOrdersPage() {
                     {order.items.slice(0, 3).map((item) => (
                       <div
                         key={`${item.productId}-${item.size}`}
-                        className="relative h-14 w-12 overflow-hidden rounded-lg border-2 border-white bg-store-faint"
+                        className="relative h-14 w-12 overflow-hidden rounded-lg border-2 border-white bg-store-faint flex items-center justify-center"
                       >
-                        {item.image && (
+                        {item.image ? (
                           <Image src={item.image} alt="" fill className="object-cover" sizes="48px" />
+                        ) : (
+                          <span className="text-[8px] text-store-muted text-center px-0.5">No img</span>
                         )}
                       </div>
                     ))}

@@ -73,19 +73,25 @@ export default function ProductImageGallery({
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className="group relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint select-none cursor-grab active:cursor-grabbing"
+        className="group relative aspect-[3/4] overflow-hidden rounded-3xl bg-store-faint select-none cursor-grab active:cursor-grabbing flex items-center justify-center"
       >
         {overlay}
         <div className="absolute inset-0">
-          <Image
-            key={safeImages[selected]}
-            src={safeImages[selected]}
-            alt={`${alt} — image ${selected + 1}`}
-            fill
-            className={`object-cover transition-opacity duration-200 ${imageClassName}`}
-            priority={priority && selected === 0}
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
+          {safeImages[selected] ? (
+            <Image
+              key={safeImages[selected]}
+              src={safeImages[selected]}
+              alt={`${alt} — image ${selected + 1}`}
+              fill
+              className={`object-cover transition-opacity duration-200 ${imageClassName}`}
+              priority={priority && selected === 0}
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-store-muted/30 to-store-muted/10">
+              <span className="text-sm text-store-muted">No image available</span>
+            </div>
+          )}
         </div>
 
         {hasMultiple && (

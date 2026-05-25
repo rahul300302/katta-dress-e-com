@@ -196,7 +196,17 @@ export async function getProduct(req, res, next) {
 
 export async function createProduct(req, res, next) {
   try {
-    const product = await Product.create(parseProductBody(req.body));
+    const body = parseProductBody(req.body);
+    
+    // Validate that product has at least one image source
+    const hasImages = Array.isArray(body.images) && body.images.length > 0;
+    const hasColorVariants = Array.isArray(body.colorVariants) && body.colorVariants.some(v => v?.image);
+    
+    if (!hasImages && !hasColorVariants) {
+      throw new AppError('Product must have at least one image or color variant with image', 400);
+    }
+    
+    const product = await Product.create(body);
     res.status(201).json({ success: true, message: 'Product created', data: numericFields(product) });
   } catch (err) {
     next(err);
@@ -207,7 +217,18 @@ export async function updateProduct(req, res, next) {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) throw new AppError('Product not found', 404);
-    await product.update(parseProductBody({ ...product.toJSON(), ...req.body }));
+    
+    const body = parseProductBody({ ...product.toJSON(), ...req.body });
+    
+    // Validate that product has at least one image source
+    const hasImages = Array.isArray(body.images) && body.images.length > 0;
+    const hasColorVariants = Array.isArray(body.colorVariants) && body.colorVariants.some(v => v?.image);
+    
+    if (!hasImages && !hasColorVariants) {
+      throw new AppError('Product must have at least one image or color variant with image', 400);
+    }
+    
+    await product.update(body);
     await product.reload();
     res.json({ success: true, message: 'Product updated', data: numericFields(product) });
   } catch (err) {

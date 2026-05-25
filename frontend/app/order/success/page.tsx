@@ -69,18 +69,20 @@ function SuccessContent() {
             <h3 className="font-semibold">Ordered Items</h3>
             {order.items.map((item) => (
               <div key={`${item.productId}-${item.size}`} className="flex gap-3 rounded-xl border border-store-border p-3">
-                {item.image && (
-                  <motion.div whileHover={{ scale: 1.05 }} className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg">
+                <motion.div whileHover={{ scale: 1.05 }} className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-store-faint flex items-center justify-center">
+                  {item.image ? (
                     <Image src={item.image} alt={item.name || ''} fill className="object-cover" sizes="56px" />
-                  </motion.div>
-                )}
+                  ) : (
+                    <span className="text-xs text-store-muted">No image</span>
+                  )}
+                </motion.div>
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-xs text-store-muted">Size {item.size} × {item.quantity}</p>
                   <p className="text-sm font-semibold">{formatPrice(item.price * item.quantity)}</p>
                 </div>
               </div>
-            ))}
+            ))}}
           </div>
         )}
 

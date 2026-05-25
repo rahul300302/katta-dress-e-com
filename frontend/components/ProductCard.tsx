@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import type { Product } from '@/services/api';
 import { formatPrice, getDiscountPercent } from '@/lib/constants';
 import { isOutOfStockForFilter, normalizeProduct } from '@/lib/productStock';
@@ -26,8 +27,14 @@ export default function ProductCard({
   const price = p.offerPrice && p.offerPrice < p.price ? p.offerPrice : p.price;
   const discount = getDiscountPercent(p.price, p.offerPrice);
   const outOfStockOnCard = isOutOfStockForFilter(p, filterSize || undefined);
-  const thumb =
-    getColorVariants(p)[0]?.image || p.images[0] || '/placeholder.jpg';
+  
+  // Get all unique images from colorVariants and main images
+  const colorVariantImages = getColorVariants(p).map(v => v.image).filter(Boolean);
+  const allImages = [...new Set([...colorVariantImages, ...(p.images || [])])].filter(Boolean);
+  const thumb = allImages[0] || '/placeholder.jpg';
+  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const displayImage = allImages[currentImageIndex] || thumb;
 
   return (
     <motion.article
@@ -41,7 +48,19 @@ export default function ProductCard({
         href={`/products/${p._id}${filterSize ? `?size=${filterSize}` : ''}`}
         className="block"
       >
-        <div className="relative aspect-[3/4] overflow-hidden bg-store-faint">
+        <div 
+          className="relative aspect-[3/4] overflow-hidden bg-store-faint"
+          onMouseEnter={() => setCurrentImageIndex(0)}
+          onMouseMove={(e) => {
+            if (allImages.length > 1) {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const y = e.clientY - rect.top;
+              const section = Math.floor((y / rect.height) * allImages.length);
+              setCurrentImageIndex(Math.min(section, allImages.length - 1));
+            }
+          }}
+          onMouseLeave={() => setCurrentImageIndex(0)}
+        >
           {discount > 0 && <span className="badge-offer">-{discount}%</span>}
           {p.isHotSale && (
             <span className="absolute right-2 top-2 z-10 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
@@ -55,15 +74,27 @@ export default function ProductCard({
               </span>
             </div>
           )}
+          {displayImage ? (
             <Image
-              src={thumb}
-            alt={p.name}
-            fill
-            className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
-              outOfStockOnCard ? 'opacity-60 grayscale' : ''
-            }`}
-            sizes="(max-width: 640px) 50vw, 33vw"
-          />
+              key={displayImage}
+              src={displayImage}
+              alt={p.name}
+              fill
+              className={`object-cover transition-opacity duration-300 group-hover:scale-105 ${
+                outOfStockOnCard ? 'opacity-60 grayscale' : ''
+              }`}
+              sizes="(max-width: 640px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-store-muted/30 to-store-muted/10 flex items-center justify-center">
+              <span className="text-xs text-store-muted">No image</span>
+              </div>
+            )}
+          {allImages.length > 1 && (
+            <div className="absolute bottom-2 right-2 z-10 rounded-full bg-black/60 px-2 py-1 text-[10px] font-medium text-white">
+              {currentImageIndex + 1} / {allImages.length}
+            </div>
+          )}
         </div>
         <div className={compact ? 'px-1 pb-1 pt-3' : 'p-4'}>
           {!compact && (

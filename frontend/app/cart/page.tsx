@@ -109,8 +109,20 @@ export default function CartPage() {
               transition={{ delay: i * 0.05 }}
               className="surface-card flex gap-4 p-4"
             >
-              <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-store-faint">
-                <Image src={item.image} alt={item.name} fill className="object-cover" sizes="96px" />
+              <div className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-store-faint flex items-center justify-center">
+                {item.image ? (
+                  <Image 
+                    src={item.image} 
+                    alt={item.name} 
+                    fill 
+                    className="object-cover" 
+                    sizes="96px"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-store-muted/30 to-store-muted/10 flex items-center justify-center">
+                    <span className="text-xs text-store-muted">No image</span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-1 flex-col justify-between">
                 <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 300 }}>
