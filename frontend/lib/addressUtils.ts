@@ -1,6 +1,23 @@
 import type { DeliveryAddress } from '@/services/api';
 import type { ApiUser } from '@/store/authStore';
 
+export const ADDRESS_LABELS = ['Home', 'Office', 'Other'] as const;
+export const TSHIRT_SIZES = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as const;
+export const INDIAN_STATES = [
+  'Tamil Nadu',
+  'Kerala',
+  'Karnataka',
+  'Andhra Pradesh',
+  'Telangana',
+  'Maharashtra',
+  'Delhi',
+  'Gujarat',
+  'Rajasthan',
+  'West Bengal',
+  'Punjab',
+  'Other',
+] as const;
+
 export const emptyDeliveryAddress = (): DeliveryAddress => ({
   name: '',
   phone: '',
@@ -9,7 +26,24 @@ export const emptyDeliveryAddress = (): DeliveryAddress => ({
   city: '',
   state: 'Tamil Nadu',
   pincode: '',
+  label: 'Home',
+  flatHouse: '',
+  area: '',
+  landmark: '',
+  alternatePhone: '',
+  deliveryInstructions: '',
+  preferredSize: '',
 });
+
+function composeStreet(addr: Partial<DeliveryAddress>): string {
+  const parts = [addr.flatHouse, addr.area, addr.landmark]
+    .map((p) => (p || '').trim())
+    .filter(Boolean);
+  const composed = parts.join(', ');
+  const street = (addr.street || '').trim();
+  if (composed.length >= 5) return composed;
+  return street;
+}
 
 export function normalizePhone(phone: string): string {
   let digits = (phone || '').replace(/\D/g, '');
@@ -20,14 +54,32 @@ export function normalizePhone(phone: string): string {
 }
 
 export function sanitizeAddress(addr: DeliveryAddress): DeliveryAddress {
+  const alt = normalizePhone(addr.alternatePhone || '');
+  const street = composeStreet(addr).replace(/\s+/g, ' ');
+  const label = ADDRESS_LABELS.includes(addr.label as (typeof ADDRESS_LABELS)[number])
+    ? addr.label
+    : 'Home';
+  const preferredSize = TSHIRT_SIZES.includes(
+    addr.preferredSize as (typeof TSHIRT_SIZES)[number]
+  )
+    ? addr.preferredSize
+    : '';
+
   return {
     name: (addr.name || '').trim().replace(/\s+/g, ' '),
     phone: normalizePhone(addr.phone || ''),
     email: (addr.email || '').trim().toLowerCase(),
-    street: (addr.street || '').trim().replace(/\s+/g, ' '),
+    street,
     city: (addr.city || '').trim().replace(/\s+/g, ' '),
     state: (addr.state || '').trim().replace(/\s+/g, ' '),
     pincode: (addr.pincode || '').replace(/\D/g, '').slice(0, 6),
+    label,
+    flatHouse: (addr.flatHouse || '').trim(),
+    area: (addr.area || '').trim(),
+    landmark: (addr.landmark || '').trim(),
+    alternatePhone: alt.length === 10 ? alt : '',
+    deliveryInstructions: (addr.deliveryInstructions || '').trim().slice(0, 300),
+    preferredSize: preferredSize || '',
   };
 }
 
@@ -41,6 +93,9 @@ export function isAddressComplete(addr?: Partial<DeliveryAddress> | null): boole
     city: addr.city || '',
     state: addr.state || '',
     pincode: addr.pincode || '',
+    flatHouse: addr.flatHouse,
+    area: addr.area,
+    landmark: addr.landmark,
   });
   return Boolean(
     normalized.name &&
@@ -66,6 +121,13 @@ export function buildAddressFromUser(
     city: base?.city?.trim() || '',
     state: base?.state?.trim() || 'Tamil Nadu',
     pincode: base?.pincode || '',
+    label: base?.label || 'Home',
+    flatHouse: base?.flatHouse || '',
+    area: base?.area || '',
+    landmark: base?.landmark || '',
+    alternatePhone: base?.alternatePhone || '',
+    deliveryInstructions: base?.deliveryInstructions || '',
+    preferredSize: base?.preferredSize || '',
   });
 }
 
@@ -236,6 +298,21 @@ export function geolocationErrorMessage(code: number): string {
 }
 
 export function formatAddressPreview(addr: Partial<DeliveryAddress>): string {
-  const parts = [addr.street, addr.city, addr.state, addr.pincode].filter(Boolean);
+  const street = composeStreet(addr) || addr.street;
+  const parts = [street, addr.city, addr.state, addr.pincode].filter(Boolean);
   return parts.join(', ') || 'Address detected';
+}
+
+export function formatSavedAddressBlock(addr: DeliveryAddress): string[] {
+  const s = sanitizeAddress(addr);
+  const lines: string[] = [];
+  if (s.label) lines.push(`${s.label} address`);
+  lines.push(s.name);
+  lines.push(s.street);
+  lines.push(`${s.city}, ${s.state} — ${s.pincode}`);
+  lines.push(`Phone: ${s.phone}`);
+  if (s.alternatePhone) lines.push(`Alt: ${s.alternatePhone}`);
+  if (s.preferredSize) lines.push(`Usual size: ${s.preferredSize}`);
+  if (s.deliveryInstructions) lines.push(`Note: ${s.deliveryInstructions}`);
+  return lines;
 }

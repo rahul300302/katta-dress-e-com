@@ -191,7 +191,7 @@ export default function Navbar() {
               >
                 <Package className="h-5 w-5" />
               </Link>
-              <Link href="/account/profile" className={iconBtn} title="My Profile" aria-label="My Profile">
+              <Link href="/account" className={iconBtn} title="Account settings" aria-label="Account settings">
                 {user.avatar && !avatarError ? (
                   <img
                     src={user.avatar}
@@ -291,12 +291,12 @@ export default function Navbar() {
                 My Orders
               </Link>
               <Link
-                href="/account/profile"
+                href="/account"
                 onClick={() => setDrawerOpen(false)}
                 className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-store-text hover:bg-store-faint"
               >
                 <User className="h-4 w-4" />
-                My Profile
+                Account &amp; settings
               </Link>
               {showAdmin && (
                 <Link

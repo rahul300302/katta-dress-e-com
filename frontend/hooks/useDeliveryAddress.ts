@@ -161,7 +161,7 @@ export function useDeliveryAddress(enabled: boolean) {
         setAddressSource('saved');
       } else {
         setLocationError(
-          'No complete saved address in your profile. Save your address under Account → Profile first.'
+          'No complete saved address. Add one under Account → Delivery address.'
         );
       }
     } catch {

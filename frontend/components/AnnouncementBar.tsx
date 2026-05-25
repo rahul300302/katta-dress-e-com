@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Truck } from 'lucide-react';
 import api from '@/services/api';
 
@@ -20,12 +21,26 @@ export default function AnnouncementBar() {
       .catch(() => {});
   }, []);
 
+  const line = (
+    <span className="inline-flex shrink-0 items-center gap-2 px-8">
+      <Truck className="h-3.5 w-3.5 shrink-0" />
+      {text}
+    </span>
+  );
+
   return (
-    <div className="bg-store-text py-2 text-center text-xs font-medium tracking-wide text-store-bg sm:text-sm">
-      <span className="inline-flex items-center gap-2 px-4">
-        <Truck className="h-3.5 w-3.5 shrink-0" />
-        {text}
-      </span>
-    </div>
+    <motion.div
+      initial={{ y: -40, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="overflow-hidden bg-store-text py-2 text-xs font-medium tracking-wide text-store-bg sm:text-sm"
+    >
+      <div className="flex w-max animate-marquee">
+        {line}
+        {line}
+        {line}
+        {line}
+      </div>
+    </motion.div>
   );
 }

@@ -92,4 +92,28 @@
   .chip-inactive {
     @apply border-store-border bg-store-faint text-store-text hover:border-store-text;
   }
+  .animate-underline {
+    @apply relative;
+  }
+  .animate-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-0.5 w-0 bg-store-text transition-all duration-300;
+  }
+  .animate-underline:hover::after {
+    @apply w-full;
+  }
+  .glow-ring {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--store-text) 15%, transparent);
+    animation: glowRing 2.5s ease-in-out infinite;
+  }
+}
+
+@keyframes glowRing {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--store-text) 8%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 24px 4px color-mix(in srgb, var(--store-text) 12%, transparent);
+  }
 }

@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Product } from '@/services/api';
 import ProductCard from './ProductCard';
+import AnimatedSection from '@/components/motion/AnimatedSection';
+import StaggerGrid, { StaggerItem } from '@/components/motion/StaggerGrid';
+import { fadeUp, viewportOnce } from '@/lib/motion';
 
 interface Props {
   title: string;
@@ -16,12 +19,13 @@ export default function ProductSection({ title, subtitle, products, href }: Prop
   if (!products?.length) return null;
 
   return (
-    <section className="py-16 md:py-20">
+    <AnimatedSection className="py-16 md:py-20">
       <div className="container-main">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+          variants={fadeUp}
           className="mb-10 flex flex-wrap items-end justify-between gap-4"
         >
           <div>
@@ -29,17 +33,24 @@ export default function ProductSection({ title, subtitle, products, href }: Prop
             {subtitle && <p className="mt-2 text-store-muted">{subtitle}</p>}
           </div>
           {href && (
-            <Link href={href} className="text-sm font-semibold underline-offset-4 hover:underline">
-              View all →
-            </Link>
+            <motion.div whileHover={{ x: 4 }} transition={{ type: 'spring', stiffness: 400 }}>
+              <Link
+                href={href}
+                className="animate-underline text-sm font-semibold underline-offset-4"
+              >
+                View all →
+              </Link>
+            </motion.div>
           )}
         </motion.div>
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+        <StaggerGrid className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {products.map((p, i) => (
-            <ProductCard key={p._id} product={p} index={i} />
+            <StaggerItem key={p._id}>
+              <ProductCard product={p} index={i} />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGrid>
       </div>
-    </section>
+    </AnimatedSection>
   );
 }

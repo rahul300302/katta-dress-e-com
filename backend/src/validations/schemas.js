@@ -10,6 +10,16 @@ export const updateCartSchema = Joi.object({
   quantity: Joi.number().integer().min(1).max(20).required(),
 });
 
+const addressExtras = {
+  label: Joi.string().valid('Home', 'Office', 'Other').allow('').optional(),
+  flatHouse: Joi.string().max(120).allow('').optional(),
+  area: Joi.string().max(120).allow('').optional(),
+  landmark: Joi.string().max(120).allow('').optional(),
+  alternatePhone: Joi.string().pattern(/^[6-9]\d{9}$/).allow('').optional(),
+  deliveryInstructions: Joi.string().max(300).allow('').optional(),
+  preferredSize: Joi.string().valid('S', 'M', 'L', 'XL', 'XXL', 'XXXL').allow('').optional(),
+};
+
 export const addressSchema = Joi.object({
   name: Joi.string().min(2).required(),
   phone: Joi.string().pattern(/^[6-9]\d{9}$/).required(),
@@ -18,6 +28,7 @@ export const addressSchema = Joi.object({
   city: Joi.string().required(),
   state: Joi.string().required(),
   pincode: Joi.string().pattern(/^\d{6}$/).required(),
+  ...addressExtras,
 });
 
 export const productSchema = Joi.object({

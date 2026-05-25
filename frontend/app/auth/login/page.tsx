@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import { BRAND } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
 import { getGoogleAuthUrl, getOAuthCallbackUrl } from '@/lib/auth';
+import FloatingBackground from '@/components/motion/FloatingBackground';
+import { scaleIn, springBouncy } from '@/lib/motion';
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -16,12 +18,13 @@ function LoginContent() {
   const googleUrl = getGoogleAuthUrl(getOAuthCallbackUrl(redirect));
 
   return (
-    <div className="container-main flex min-h-[70vh] items-center justify-center py-16">
+    <div className="relative container-main flex min-h-[70vh] items-center justify-center overflow-hidden py-16">
+      <FloatingBackground />
       <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="surface-card w-full max-w-md p-10 text-center shadow-card"
+        initial="hidden"
+        animate="visible"
+        variants={scaleIn}
+        className="surface-card relative z-10 w-full max-w-md p-10 text-center shadow-float"
       >
         <div className="flex flex-col items-center">
           <BrandLogo size="xl" showName={false} href="/" priority />
@@ -41,8 +44,9 @@ function LoginContent() {
         )}
 
         <motion.a
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          transition={springBouncy}
           href={googleUrl}
           className="btn-primary mt-8 flex w-full items-center justify-center gap-3"
         >

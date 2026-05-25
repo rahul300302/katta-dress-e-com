@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
+import FloatingBackground from '@/components/motion/FloatingBackground';
+import { scaleIn, springBouncy } from '@/lib/motion';
 import api, { type Order } from '@/services/api';
 import { formatPrice, BRAND } from '@/lib/constants';
 import { useCartStore } from '@/store/cartStore';
@@ -27,19 +29,20 @@ function SuccessContent() {
   }, [orderId]);
 
   return (
-    <div className="container-main py-12 md:py-20">
+    <div className="relative container-main overflow-hidden py-12 md:py-20">
+      <FloatingBackground />
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="surface-card mx-auto max-w-2xl p-8 text-center shadow-card md:p-12"
+        initial="hidden"
+        animate="visible"
+        variants={scaleIn}
+        className="surface-card relative z-10 mx-auto max-w-2xl p-8 text-center shadow-float md:p-12"
       >
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', delay: 0.2 }}
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ ...springBouncy, delay: 0.15 }}
         >
-          <CheckCircle className="mx-auto h-16 w-16 text-green-600" />
+          <CheckCircle className="mx-auto h-16 w-16 text-green-600 drop-shadow-sm" />
         </motion.div>
         <h1 className="mt-6 font-display text-3xl font-bold">Thank you!</h1>
         <p className="mt-2 text-store-muted">Your order with {BRAND.name} was placed successfully.</p>

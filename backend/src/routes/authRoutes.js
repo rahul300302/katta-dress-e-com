@@ -33,7 +33,7 @@ router.get('/failure', (_req, res) => {
 
 const profileUpdateSchema = Joi.object({
   name: Joi.string().min(2).optional(),
-  // addresses: Joi.array().items(addressSchema.keys({ label: Joi.string().allow('').optional() })).optional(),
+  addresses: Joi.array().items(addressSchema).max(3).optional(),
 });
 
 router.get('/me', authenticate, getMe);

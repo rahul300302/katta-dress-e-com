@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
 import ThemeProvider from '@/components/ThemeProvider';
 import CartFlyAnimation from '@/components/CartFlyAnimation';
+import AnimatedMain from '@/components/motion/AnimatedMain';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -40,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <AnnouncementBar />
           <NavbarShell />
-          <main className="min-h-screen">{children}</main>
+          <AnimatedMain>{children}</AnimatedMain>
           <Footer />
           <CartFlyAnimation />
         </Providers>

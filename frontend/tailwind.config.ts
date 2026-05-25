@@ -30,6 +30,10 @@ const config: Config = {
       animation: {
         'fade-up': 'fadeUp 0.6s ease-out forwards',
         shimmer: 'shimmer 2s infinite',
+        float: 'float 4s ease-in-out infinite',
+        'pulse-soft': 'pulseSoft 3s ease-in-out infinite',
+        marquee: 'marquee 28s linear infinite',
+        'spin-slow': 'spin 12s linear infinite',
       },
       keyframes: {
         fadeUp: {
@@ -39,6 +43,18 @@ const config: Config = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
+          '50%': { opacity: '1', transform: 'scale(1.05)' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
         },
       },
     },

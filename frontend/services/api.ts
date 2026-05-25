@@ -64,6 +64,15 @@ export interface DeliveryAddress {
   city: string;
   state: string;
   pincode: string;
+  /** Home / Office / Other */
+  label?: string;
+  flatHouse?: string;
+  area?: string;
+  landmark?: string;
+  alternatePhone?: string;
+  deliveryInstructions?: string;
+  /** Usual t-shirt size for faster checkout */
+  preferredSize?: string;
 }
 
 export interface Order {

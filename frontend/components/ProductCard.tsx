@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { cardLift, springSoft } from '@/lib/motion';
 import { useState } from 'react';
 import type { Product } from '@/services/api';
 import { formatPrice, getDiscountPercent } from '@/lib/constants';
@@ -36,10 +37,11 @@ export default function ProductCard({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.04, duration: 0.4 }}
+      initial={{ opacity: 0, y: 24, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-24px' }}
+      transition={{ delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={cardLift}
       className={compact ? 'product-card-compact group' : 'product-card'}
     >
       <Link
@@ -73,16 +75,18 @@ export default function ProductCard({
             </div>
           )}
           {displayImage ? (
+            <motion.div className="absolute inset-0" whileHover={{ scale: 1.06 }} transition={springSoft}>
             <Image
               key={displayImage}
               src={displayImage}
               alt={p.name}
               fill
-              className={`object-cover transition-opacity duration-300 group-hover:scale-105 ${
+              className={`object-cover transition-opacity duration-500 ${
                 outOfStockOnCard ? 'opacity-60 grayscale' : ''
               }`}
               sizes="(max-width: 640px) 50vw, 33vw"
             />
+            </motion.div>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-store-muted/30 to-store-muted/10 flex items-center justify-center">
               <span className="text-xs text-store-muted">No image</span>

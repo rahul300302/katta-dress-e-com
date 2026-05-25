@@ -12,6 +12,8 @@ import { useMounted } from '@/hooks/useMounted';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import AnimatedHeading from '@/components/motion/AnimatedHeading';
+import { popIn, scaleIn } from '@/lib/motion';
 
 export default function CartPage() {
   const router = useRouter();
@@ -73,8 +75,15 @@ export default function CartPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="container-main flex min-h-[50vh] flex-col items-center justify-center py-20 text-center">
-        <ShoppingBag className="mb-4 h-16 w-16 text-store-muted" />
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={scaleIn}
+        className="container-main flex min-h-[50vh] flex-col items-center justify-center py-20 text-center"
+      >
+        <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity }}>
+          <ShoppingBag className="mb-4 h-16 w-16 text-store-muted" />
+        </motion.div>
         <h1 className="section-title">Your Cart</h1>
         <p className="mt-2 text-store-muted">Sign in with Google to view and manage your cart</p>
         <Link href="/auth/login?redirect=/cart" className="btn-primary mt-8">
@@ -83,7 +92,7 @@ export default function CartPage() {
         <Link href="/products" className="mt-4 text-sm underline">
           Continue shopping
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
@@ -111,7 +120,7 @@ export default function CartPage() {
 
   return (
     <div className="container-main py-10 md:py-14">
-      <h1 className="section-title">Your Cart</h1>
+      <AnimatedHeading title="Your Cart" subtitle={`${cart.items.length} item${cart.items.length === 1 ? '' : 's'} in your bag`} />
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           {cart.items.map((item, i) => (
@@ -176,8 +185,10 @@ export default function CartPage() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial="hidden"
+          animate="visible"
+          variants={popIn}
+          transition={{ delay: 0.15 }}
           className="h-fit rounded-2xl border border-store-border bg-store-faint p-6"
         >
           <h2 className="font-semibold">Order Summary</h2>

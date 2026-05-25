@@ -3,8 +3,13 @@
 import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api, { type Product } from '@/services/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters, { type ProductFiltersState } from '@/components/ProductFilters';
+import AnimatedHeading from '@/components/motion/AnimatedHeading';
+import StaggerGrid, { StaggerItem } from '@/components/motion/StaggerGrid';
+import ShimmerSkeleton from '@/components/motion/ShimmerSkeleton';
+import { fadeUp } from '@/lib/motion';
 
 function readFiltersFromParams(searchParams: URLSearchParams): ProductFiltersState {
   return {
@@ -114,10 +119,7 @@ function ProductsContent() {
 
   return (
     <div className="container-main py-8 md:py-12">
-      <div className="mb-6 md:mb-8">
-        <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
-        <p className="mt-1 text-sm text-store-muted">{subtitle}</p>
-      </div>
+      <AnimatedHeading title={title} subtitle={subtitle} className="mb-6 md:mb-8" />
 
       <ProductFilters
         filters={filters}
@@ -126,24 +128,51 @@ function ProductsContent() {
         mobileOpen={filterDrawerOpen}
         onMobileOpenChange={setFilterDrawerOpen}
       >
-        <p className="mb-4 text-xs text-store-muted">
+        <motion.p
+          key={loading ? 'loading' : String(products.length)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-4 text-xs text-store-muted"
+        >
           {loading ? 'Loading...' : `${products.length} product${products.length === 1 ? '' : 's'}`}
-        </p>
-        {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-store-border" />
-            ))}
-          </div>
-        ) : products.length === 0 ? (
-          <p className="py-20 text-center text-store-muted">No products found.</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-            {products.map((p, i) => (
-              <ProductCard key={p._id} product={p} index={i} filterSize={filters.size} compact />
-            ))}
-          </div>
-        )}
+        </motion.p>
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3"
+            >
+              <ShimmerSkeleton count={8} />
+            </motion.div>
+          ) : products.length === 0 ? (
+            <motion.p
+              key="empty"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="py-20 text-center text-store-muted"
+            >
+              No products found.
+            </motion.p>
+          ) : (
+            <motion.div
+              key="grid"
+              initial="hidden"
+              animate="visible"
+              variants={fadeUp}
+            >
+              <StaggerGrid className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+                {products.map((p, i) => (
+                  <StaggerItem key={p._id}>
+                    <ProductCard product={p} index={i} filterSize={filters.size} compact />
+                  </StaggerItem>
+                ))}
+              </StaggerGrid>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </ProductFilters>
     </div>
   );

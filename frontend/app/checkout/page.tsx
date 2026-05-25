@@ -11,6 +11,8 @@ import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useRazorpay, preloadRazorpay } from '@/hooks/useRazorpay';
 import { useCartStore } from '@/store/cartStore';
 import { useDeliveryAddress } from '@/hooks/useDeliveryAddress';
+import AnimatedHeading from '@/components/motion/AnimatedHeading';
+import { popIn, slideInLeft, slideInRight } from '@/lib/motion';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -106,11 +108,12 @@ export default function CheckoutPage() {
 
   return (
     <div className="container-main py-10 md:py-14">
-      <h1 className="section-title">Checkout — {BRAND.name}</h1>
+      <AnimatedHeading title={`Checkout — ${BRAND.name}`} subtitle="Secure payment via Razorpay" />
       <form onSubmit={handlePayment} className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px]">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial="hidden"
+          animate="visible"
+          variants={slideInLeft}
           className="surface-card space-y-4 p-6"
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -244,8 +247,9 @@ export default function CheckoutPage() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial="hidden"
+          animate="visible"
+          variants={slideInRight}
           className="h-fit rounded-2xl border border-store-border bg-store-faint p-6"
         >
           <h2 className="font-semibold text-store-text">Order Summary</h2>
