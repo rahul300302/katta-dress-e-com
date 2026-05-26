@@ -9,6 +9,9 @@ import type { Product } from '@/services/api';
 import { formatPrice, getDiscountPercent } from '@/lib/constants';
 import { isOutOfStockForFilter, normalizeProduct } from '@/lib/productStock';
 import { getDisplayImages } from '@/lib/colorVariants';
+import { Heart } from 'lucide-react';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useAuthStore } from '@/store/authStore';
 
 interface Props {
   product: Product;
@@ -16,6 +19,8 @@ interface Props {
   filterSize?: string;
   /** Minimal grid: image + name + price only (SAFUU-style shop) */
   compact?: boolean;
+  /** Set to true for LCP images above the fold */
+  priority?: boolean;
 }
 
 export default function ProductCard({
@@ -23,6 +28,7 @@ export default function ProductCard({
   index = 0,
   filterSize = '',
   compact = true,
+  priority = false,
 }: Props) {
   const p = normalizeProduct(product);
   const price = p.offerPrice && p.offerPrice < p.price ? p.offerPrice : p.price;
@@ -34,6 +40,30 @@ export default function ProductCard({
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const displayImage = allImages[currentImageIndex] || thumb;
+
+  const { toggleFavorite, favorites } = useFavorites();
+  const user = useAuthStore((s) => s.user);
+  const isFav = favorites.has(p._id);
+  const [isTogglingFav, setIsTogglingFav] = useState(false);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      console.warn('Please log in to add favorites');
+      return;
+    }
+
+    setIsTogglingFav(true);
+    try {
+      await toggleFavorite(p._id);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    } finally {
+      setIsTogglingFav(false);
+    }
+  };
 
   return (
     <motion.article
@@ -67,6 +97,20 @@ export default function ProductCard({
               Hot
             </span>
           )}
+          {/* Favorite Button */}
+          <button
+            onClick={handleToggleFavorite}
+            disabled={isTogglingFav}
+            className="absolute right-2 top-2 z-20 rounded-full bg-white/90 p-2 backdrop-blur-sm transition hover:bg-white disabled:opacity-50"
+            title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Heart
+              size={18}
+              className={`transition-colors ${
+                isFav ? 'fill-red-500 text-red-500' : 'text-store-muted hover:text-red-500'
+              }`}
+            />
+          </button>
           {outOfStockOnCard && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
               <span className="rounded-full bg-store-bg px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-store-text">
@@ -85,6 +129,7 @@ export default function ProductCard({
                 outOfStockOnCard ? 'opacity-60 grayscale' : ''
               }`}
               sizes="(max-width: 640px) 50vw, 33vw"
+              priority={priority}
             />
             </motion.div>
           ) : (

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
-import { Settings, Moon, Sun, Shirt } from 'lucide-react';
+import { Settings, Moon, Sun, Shirt, Heart } from 'lucide-react';
 
 export default function AccountPreferencesPage() {
   const theme = useThemeStore((s) => s.theme);
@@ -65,6 +65,24 @@ export default function AccountPreferencesPage() {
         <p className="mt-4 text-lg font-bold">
           {preferredSize ? `Size ${preferredSize}` : 'Not set yet'}
         </p>
+      </section>
+
+      <section className="surface-card rounded-2xl border border-store-border p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="flex items-center gap-2 font-semibold">
+              <Heart className="h-5 w-5" />
+              Favorites
+            </h3>
+            <p className="mt-1 text-sm text-store-muted">View and manage your saved products.</p>
+          </div>
+          <Link
+            href="/account/preferences/favorites"
+            className="rounded-lg border border-store-border px-4 py-2 text-sm font-semibold transition hover:bg-store-faint"
+          >
+            View Favorites
+          </Link>
+        </div>
       </section>
 
       <section className="surface-card rounded-2xl border border-store-border p-6">

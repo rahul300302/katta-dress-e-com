@@ -166,7 +166,7 @@ function ProductsContent() {
               <StaggerGrid className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                 {products.map((p, i) => (
                   <StaggerItem key={p._id}>
-                    <ProductCard product={p} index={i} filterSize={filters.size} compact />
+                    <ProductCard product={p} index={i} filterSize={filters.size} compact priority={i < 6} />
                   </StaggerItem>
                 ))}
               </StaggerGrid>

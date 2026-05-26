@@ -8,6 +8,7 @@ import adminRoutes from './adminRoutes.js';
 import uploadRoutes from './uploadRoutes.js';
 import siteRoutes from './siteRoutes.js';
 import contactRoutes from './contactRoutes.js';
+import favoriteRoutes from './favoriteRoutes.js';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/admin', adminRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/site', siteRoutes);
 router.use('/contact', contactRoutes);
+router.use('/favorites', favoriteRoutes);
 
 export default router;

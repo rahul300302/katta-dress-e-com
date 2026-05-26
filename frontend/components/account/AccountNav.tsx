@@ -10,6 +10,7 @@ import {
   Settings,
   ShoppingBag,
   ChevronRight,
+  Heart,
 } from 'lucide-react';
 
 const items = [
@@ -43,6 +44,12 @@ const items = [
     label: 'Preferences',
     description: 'Theme & shopping',
     icon: Settings,
+  },
+  {
+    href: '/account/preferences/favorites',
+    label: 'Favorites',
+    description: 'Your saved products',
+    icon: Heart,
   },
 ];
 

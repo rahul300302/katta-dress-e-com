@@ -100,4 +100,34 @@ export interface AppUser {
   createdAt: string;
 }
 
+// Favorite endpoints
+export const favoriteApi = {
+  async getFavorites(): Promise<{ success: boolean; data: Product[] }> {
+    const res = await api.get('/favorites');
+    return res.data;
+  },
+
+  async toggleFavorite(productId: string): Promise<{
+    success: boolean;
+    isFavorite: boolean;
+    message: string;
+  }> {
+    const res = await api.post(`/favorites/${productId}`);
+    return res.data;
+  },
+
+  async removeFavorite(productId: string): Promise<{ success: boolean; message: string }> {
+    const res = await api.delete(`/favorites/${productId}`);
+    return res.data;
+  },
+
+  async checkFavorites(productIds: string[]): Promise<{
+    success: boolean;
+    data: Record<string, boolean>;
+  }> {
+    const res = await api.post('/favorites/check', { productIds });
+    return res.data;
+  },
+};
+
 export default api;

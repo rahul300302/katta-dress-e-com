@@ -46,7 +46,7 @@ export default function ProductSection({ title, subtitle, products, href }: Prop
         <StaggerGrid className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {products.map((p, i) => (
             <StaggerItem key={p._id}>
-              <ProductCard product={p} index={i} />
+              <ProductCard product={p} index={i} priority={i < 4} />
             </StaggerItem>
           ))}
         </StaggerGrid>

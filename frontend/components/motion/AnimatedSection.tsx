@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { fadeUp, viewportOnce } from '@/lib/motion';
 
@@ -11,8 +12,13 @@ interface Props {
 
 export default function AnimatedSection({ children, className, delay = 0 }: Props) {
   const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
 
-  if (reduceMotion) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || reduceMotion) {
     return <section className={className}>{children}</section>;
   }
 

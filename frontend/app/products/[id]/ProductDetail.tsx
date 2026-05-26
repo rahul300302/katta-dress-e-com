@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Zap, Heart } from 'lucide-react';
 import type { Product } from '@/services/api';
 import { formatPrice, getDiscountPercent, type Size } from '@/lib/constants';
 import { normalizeProduct, stockForSize } from '@/lib/productStock';
 import { getColorVariants, getDisplayImages } from '@/lib/colorVariants';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useCartStore } from '@/store/cartStore';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useAuthStore } from '@/store/authStore';
 import { rectCenter } from '@/lib/cartFly';
 import ProductCard from '@/components/ProductCard';
 import ProductImageGallery from '@/components/ProductImageGallery';
@@ -25,11 +27,15 @@ export default function ProductDetail({ product, related }: Props) {
   const searchParams = useSearchParams();
   const { requireAuth } = useRequireAuth();
   const addItem = useCartStore((s) => s.addItem);
+  const { toggleFavorite, favorites } = useFavorites();
+  const user = useAuthStore((s) => s.user);
   const [addedToast, setAddedToast] = useState(false);
+  const [isTogglingFav, setIsTogglingFav] = useState(false);
   const galleryRef = useRef<HTMLDivElement>(null);
   const p = useMemo(() => normalizeProduct(product), [product]);
   const colorVariants = useMemo(() => getColorVariants(p), [p]);
   const offeredSizes = p.sizes;
+  const isFav = favorites.has(p._id);
 
   const [mounted, setMounted] = useState(false);
   const [selectedColor, setSelectedColor] = useState('');
@@ -100,6 +106,22 @@ export default function ProductDetail({ product, related }: Props) {
     }
   }
 
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      console.warn('Please log in to add favorites');
+      return;
+    }
+
+    setIsTogglingFav(true);
+    try {
+      await toggleFavorite(p._id);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    } finally {
+      setIsTogglingFav(false);
+    }
+  };
+
   return (
     <div className="container-main pt-8 pb-28 sm:pt-10 sm:pb-14 md:pt-14 md:pb-14">
       <AnimatePresence>
@@ -137,11 +159,26 @@ export default function ProductDetail({ product, related }: Props) {
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-wider text-store-muted">{p.collection}</p>
           <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">{p.name}</h1>
-          {discount > 0 && (
-            <span className="mt-3 inline-block rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-store-bg">
-              {discount}% OFF
-            </span>
-          )}
+          <div className="mt-3 flex items-center gap-3">
+            {discount > 0 && (
+              <span className="inline-block rounded-full bg-store-text px-3 py-1 text-xs font-semibold text-store-bg">
+                {discount}% OFF
+              </span>
+            )}
+            <button
+              onClick={handleToggleFavorite}
+              disabled={isTogglingFav}
+              className="rounded-full border border-store-border p-2.5 transition hover:bg-store-faint disabled:opacity-50"
+              title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Heart
+                size={20}
+                className={`transition-colors ${
+                  isFav ? 'fill-red-500 text-red-500' : 'text-store-muted hover:text-red-500'
+                }`}
+              />
+            </button>
+          </div>
           <div className="mt-4 flex items-center gap-3">
             <span className="text-2xl font-bold">{formatPrice(price)}</span>
             {p.offerPrice && p.offerPrice < p.price && (

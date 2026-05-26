@@ -2,13 +2,20 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { pageVariants } from '@/lib/motion';
 
 export default function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
 
-  if (reduceMotion) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render motion on server or when motion is reduced, to avoid hydration mismatch
+  if (!mounted || reduceMotion) {
     return <>{children}</>;
   }
 

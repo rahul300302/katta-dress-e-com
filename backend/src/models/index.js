@@ -114,6 +114,22 @@ const OrderItem = sequelize.define(
   { tableName: 'order_items', timestamps: false }
 );
 
+const Favorite = sequelize.define(
+  'Favorite',
+  {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    userId: { type: DataTypes.INTEGER, allowNull: false },
+    productId: { type: DataTypes.INTEGER, allowNull: false },
+  },
+  { 
+    tableName: 'favorites', 
+    timestamps: true,
+    indexes: [
+      { fields: ['userId', 'productId'], unique: true }
+    ]
+  }
+);
+
 User.hasMany(Cart, { foreignKey: 'userId' });
 Cart.belongsTo(User, { foreignKey: 'userId' });
 Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'items', onDelete: 'CASCADE' });
@@ -125,7 +141,11 @@ Order.belongsTo(User, { foreignKey: 'userId' });
 Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'items', onDelete: 'CASCADE' });
 OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 
-export { User, Product, Cart, CartItem, Order, OrderItem, SiteSetting, sequelize };
+User.hasMany(Favorite, { foreignKey: 'userId', onDelete: 'CASCADE' });
+Favorite.belongsTo(User, { foreignKey: 'userId' });
+Favorite.belongsTo(Product, { foreignKey: 'productId' });
+
+export { User, Product, Cart, CartItem, Order, OrderItem, Favorite, SiteSetting, sequelize };
 
 export async function syncDatabase() {
   await sequelize.sync({ alter: true });
