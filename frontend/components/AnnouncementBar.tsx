@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Truck } from 'lucide-react';
 import api from '@/services/api';
 
-const DEFAULT_TEXT = "Free shipping on orders above ₹999 · Premium men's tees only";
+const DEFAULT_TEXT = "Free shipping on orders above ₹1500 · Premium men's tees only";
 
 export default function AnnouncementBar() {
   const [text, setText] = useState(DEFAULT_TEXT);

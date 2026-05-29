@@ -4,13 +4,11 @@ import { useEffect, useState } from 'react';
 import { Heart, Loader2 } from 'lucide-react';
 import { favoriteApi, Product } from '@/services/api';
 import ProductCard from '@/components/ProductCard';
-import { useFavorites } from '@/hooks/useFavorites';
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { loadFavorites } = useFavorites();
 
   useEffect(() => {
     loadFavoritesData();
@@ -35,8 +33,7 @@ export default function FavoritesPage() {
   const handleRemoveFavorite = async (productId: string) => {
     try {
       await favoriteApi.removeFavorite(productId);
-      setFavorites(favorites.filter((p) => p._id !== productId));
-      await loadFavorites();
+      setFavorites((prevFavorites) => prevFavorites.filter((p) => p._id !== productId));
     } catch (err) {
       console.error('Failed to remove favorite:', err);
       setError('Failed to remove favorite. Please try again.');

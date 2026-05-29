@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getGoogleAuthUrl, getOAuthCallbackUrl } from '@/lib/auth';
 import BrandingEditor from '@/components/admin/BrandingEditor';
 import { useMounted } from '@/hooks/useMounted';
+import SuccessModal from '@/components/SuccessModal';
 
 type Tab = 'products' | 'hero' | 'orders' | 'users';
 
@@ -56,6 +57,19 @@ export default function AdminPage() {
   });
   const [productsView, setProductsView] = useState<'create' | 'list'>('create');
   const [productFilter, setProductFilter] = useState<'all' | 'hot' | 'offer' | 'new' | 'best' | 'others'>('all');
+  const [successModal, setSuccessModal] = useState<{ open: boolean; title: string; message: string }>({
+    open: false,
+    title: 'Success!',
+    message: '',
+  });
+
+  function showSuccess(message: string, title = 'Success!') {
+    setSuccessModal({ open: true, title, message });
+  }
+
+  function closeSuccessModal() {
+    setSuccessModal({ ...successModal, open: false });
+  }
 
   useEffect(() => {
     if (!mounted) return;
@@ -151,7 +165,7 @@ export default function AdminPage() {
         colorVariants: [{ name: 'Black', image: '' }],
         images: [],
       });
-      alert('Product created successfully!');
+      showSuccess('Your product has been created and is now available in your store.', 'Product Created');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create product';
       console.error('Create product error:', err);
@@ -165,7 +179,7 @@ export default function AdminPage() {
       await api.delete(`/products/${id}`);
       setProducts((p) => p.filter((x) => x._id !== id));
       if (modalProduct?._id === id) setModalProduct(null);
-      alert('Product deleted successfully!');
+      showSuccess('The product has been permanently removed from your store.', 'Product Deleted');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete product';
       console.error('Delete product error:', err);
@@ -198,7 +212,7 @@ export default function AdminPage() {
       const updated = res.data.data as Product;
       setProducts((list) => list.map((p) => (p._id === id ? updated : p)));
       setModalProduct(updated);
-      alert('Product updated successfully!');
+      showSuccess('Your product changes have been saved successfully.', 'Product Updated');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update product';
       console.error('Update product error:', err);
@@ -215,7 +229,7 @@ export default function AdminPage() {
     try {
       await api.patch(`/orders/${id}/status`, { orderStatus });
       setOrders((o) => o.map((x) => (x._id === id ? { ...x, orderStatus } : x)));
-      alert('Order status updated!');
+      showSuccess(`Order status updated to ${orderStatus}.`, 'Order Updated');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update order status';
       console.error('Update order error:', err);
@@ -229,7 +243,7 @@ export default function AdminPage() {
       if (!confirm(`Set ${user.email} as ${nextRole}?`)) return;
       const res = await api.patch(`/admin/users/${user._id}/role`, { role: nextRole });
       setUsers((list) => list.map((u) => (u._id === user._id ? res.data.data : u)));
-      alert('User role updated!');
+      showSuccess(`${user.email} is now a ${nextRole}.`, 'Role Updated');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update user role';
       console.error('Toggle user role error:', err);
@@ -622,6 +636,13 @@ export default function AdminPage() {
         open={!!modalProduct}
         onClose={() => setModalProduct(null)}
         onSave={handleUpdateProduct}
+      />
+      <SuccessModal
+        open={successModal.open}
+        onClose={closeSuccessModal}
+        title={successModal.title}
+        message={successModal.message}
+        autoCloseDuration={3000}
       />
     </div>
   );

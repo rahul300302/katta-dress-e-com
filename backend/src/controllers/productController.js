@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { sequelize, Product } from '../models/index.js';
+import { sequelize, Product, CartItem, OrderItem, Favorite } from '../models/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { toApi, toApiList } from '../utils/serialize.js';
 import {
@@ -240,6 +240,13 @@ export async function deleteProduct(req, res, next) {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) throw new AppError('Product not found', 404);
+    
+    // Delete related records to avoid foreign key constraint errors
+    await CartItem.destroy({ where: { productId: req.params.id } });
+    await OrderItem.destroy({ where: { productId: req.params.id } });
+    await Favorite.destroy({ where: { productId: req.params.id } });
+    
+    // Now delete the product
     await product.destroy();
     res.json({ success: true, message: 'Product deleted' });
   } catch (err) {

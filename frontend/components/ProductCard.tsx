@@ -93,24 +93,10 @@ export default function ProductCard({
         >
           {discount > 0 && <span className="badge-offer">-{discount}%</span>}
           {p.isHotSale && (
-            <span className="absolute right-2 top-2 z-10 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+            <span className="absolute left-3 top-14 z-10 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
               Hot
             </span>
           )}
-          {/* Favorite Button */}
-          <button
-            onClick={handleToggleFavorite}
-            disabled={isTogglingFav}
-            className="absolute right-2 top-2 z-20 rounded-full bg-white/90 p-2 backdrop-blur-sm transition hover:bg-white disabled:opacity-50"
-            title={isFav ? 'Remove from favorites' : 'Add to favorites'}
-          >
-            <Heart
-              size={18}
-              className={`transition-colors ${
-                isFav ? 'fill-red-500 text-red-500' : 'text-store-muted hover:text-red-500'
-              }`}
-            />
-          </button>
           {outOfStockOnCard && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
               <span className="rounded-full bg-store-bg px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-store-text">

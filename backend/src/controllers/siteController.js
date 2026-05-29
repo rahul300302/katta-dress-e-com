@@ -6,7 +6,7 @@ import { inferMediaType } from '../utils/mediaUtils.js';
 const HERO_KEY = 'hero_slides';
 const ANNOUNCEMENT_KEY = 'announcement_bar';
 const DEFAULT_ANNOUNCEMENT =
-  "Free shipping on orders above ₹999 · Premium men's tees only";
+  "Free shipping on orders above ₹1500 · Premium men's tees only";
 
 function normalizeSlide(slide, index) {
   const media = String(slide.media || slide.image || '').trim();

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, Save, Truck } from 'lucide-react';
 import api from '@/services/api';
 
-const DEFAULT_TEXT = "Free shipping on orders above ₹999 · Premium men's tees only";
+const DEFAULT_TEXT = "Free shipping on orders above ₹1500 · Premium men's tees only";
 
 export default function AnnouncementEditor() {
   const [text, setText] = useState(DEFAULT_TEXT);
@@ -64,7 +64,7 @@ export default function AnnouncementEditor() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         maxLength={200}
-        placeholder="e.g. Free delivery on orders above ₹999"
+        placeholder="e.g. Free delivery on orders above ₹1500"
         className="input-elegant mt-4"
       />
       <div className="mt-3 flex flex-wrap items-center gap-3">

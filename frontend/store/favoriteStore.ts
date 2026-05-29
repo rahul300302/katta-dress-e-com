@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface FavoriteStore {
   favorites: Set<string>;
@@ -11,9 +10,7 @@ interface FavoriteStore {
   clear: () => void;
 }
 
-export const useFavoriteStore = create<FavoriteStore>()(
-  persist(
-    (set, get) => ({
+export const useFavoriteStore = create<FavoriteStore>()((set, get) => ({
       favorites: new Set<string>(),
 
       addFavorite: (productId: string) => {
@@ -53,37 +50,4 @@ export const useFavoriteStore = create<FavoriteStore>()(
       clear: () => {
         set({ favorites: new Set<string>() });
       },
-    }),
-    {
-      name: 'favorites-storage',
-      storage: {
-        getItem: (name) => {
-          const item = localStorage.getItem(name);
-          if (!item) return null;
-          try {
-            const parsed = JSON.parse(item);
-            return {
-              state: {
-                ...parsed.state,
-                favorites: new Set(parsed.state.favorites || []),
-              },
-            };
-          } catch {
-            return null;
-          }
-        },
-        setItem: (name, value) => {
-          const serialized = {
-            ...value,
-            state: {
-              ...value.state,
-              favorites: Array.from(value.state.favorites || []),
-            },
-          };
-          localStorage.setItem(name, JSON.stringify(serialized));
-        },
-        removeItem: (name) => localStorage.removeItem(name),
-      },
-    }
-  )
-);
+    }));
