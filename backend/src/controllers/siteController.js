@@ -2,6 +2,7 @@ import { SiteSetting } from '../models/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { DEFAULT_HERO_SLIDES } from '../constants/heroSlides.js';
 import { inferMediaType } from '../utils/mediaUtils.js';
+import { DELIVERY_SETTINGS_KEY, getDeliverySettings } from '../services/deliverySettings.js';
 
 const HERO_KEY = 'hero_slides';
 const ANNOUNCEMENT_KEY = 'announcement_bar';
@@ -131,6 +132,53 @@ export async function getBranding(_req, res, next) {
   try {
     const setting = await getOrCreateBrandingSetting();
     res.json({ success: true, data: setting.value });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getDeliverySettingsHandler(_req, res, next) {
+  try {
+    const data = await getDeliverySettings();
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateDeliverySettings(req, res, next) {
+  try {
+    const charge = Number(req.body.charge);
+    const freeDeliveryMinOrder = Number(req.body.freeDeliveryMinOrder);
+
+    if (Number.isNaN(charge) || charge < 0) {
+      throw new AppError('Delivery charge must be 0 or greater', 400);
+    }
+    if (Number.isNaN(freeDeliveryMinOrder) || freeDeliveryMinOrder < 0) {
+      throw new AppError('Free delivery minimum must be 0 or greater', 400);
+    }
+    if (charge > 9999) throw new AppError('Delivery charge is too high', 400);
+    if (freeDeliveryMinOrder > 999999) {
+      throw new AppError('Free delivery minimum is too high', 400);
+    }
+
+    const value = {
+      charge: Math.round(charge * 100) / 100,
+      freeDeliveryMinOrder: Math.round(freeDeliveryMinOrder * 100) / 100,
+    };
+
+    let setting = await SiteSetting.findOne({ where: { key: DELIVERY_SETTINGS_KEY } });
+    if (!setting) {
+      setting = await SiteSetting.create({ key: DELIVERY_SETTINGS_KEY, value });
+    } else {
+      await setting.update({ value });
+    }
+
+    res.json({
+      success: true,
+      message: 'Delivery settings updated',
+      data: setting.value,
+    });
   } catch (err) {
     next(err);
   }

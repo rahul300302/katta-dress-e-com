@@ -6,6 +6,7 @@ import {
   productOffersSize,
   stockForSize,
 } from './productStock.js';
+import { resolveDeliveryCharge } from '../services/deliverySettings.js';
 
 export function getEffectivePrice(product) {
   const price = Number(product.price);
@@ -59,13 +60,23 @@ export async function populateCartItems(cartItems) {
   return populated;
 }
 
-export function calcCartTotals(items, deliveryCharge) {
+export function calcCartTotals(items, deliveryInput) {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const discount = items.reduce((sum, i) => {
     const orig = i.originalPrice ?? i.price;
     if (orig > i.price) return sum + (orig - i.price) * i.quantity;
     return sum;
   }, 0);
+
+  let deliveryCharge;
+  if (typeof deliveryInput === 'number') {
+    deliveryCharge = deliveryInput;
+  } else if (deliveryInput && typeof deliveryInput === 'object') {
+    deliveryCharge = resolveDeliveryCharge(subtotal, deliveryInput);
+  } else {
+    deliveryCharge = 0;
+  }
+
   const totalAmount = subtotal + deliveryCharge;
   return { subtotal, discount, deliveryCharge, totalAmount };
 }

@@ -1,6 +1,6 @@
 import { Cart, CartItem } from '../models/index.js';
 import { Product } from '../models/index.js';
-import env from '../config/env.js';
+import { getDeliverySettings } from '../services/deliverySettings.js';
 import { AppError } from '../middleware/errorHandler.js';
 import {
   populateCartItems,
@@ -23,7 +23,8 @@ export async function getCart(req, res, next) {
   try {
     const cart = await getOrCreateCart(req.user.id);
     const items = await populateCartItems(await getCartItems(cart.id));
-    const totals = calcCartTotals(items, env.deliveryCharge);
+    const deliverySettings = await getDeliverySettings();
+    const totals = calcCartTotals(items, deliverySettings);
     res.json({ success: true, data: { items, ...totals } });
   } catch (err) {
     next(err);
@@ -65,7 +66,8 @@ export async function addToCart(req, res, next) {
     }
 
     const items = await populateCartItems(await getCartItems(cart.id));
-    const totals = calcCartTotals(items, env.deliveryCharge);
+    const deliverySettings = await getDeliverySettings();
+    const totals = calcCartTotals(items, deliverySettings);
     res.json({ success: true, message: 'Added to cart', data: { items, ...totals } });
   } catch (err) {
     next(err);
@@ -89,7 +91,8 @@ export async function updateCartItem(req, res, next) {
     await item.update({ quantity });
 
     const items = await populateCartItems(await getCartItems(cart.id));
-    const totals = calcCartTotals(items, env.deliveryCharge);
+    const deliverySettings = await getDeliverySettings();
+    const totals = calcCartTotals(items, deliverySettings);
     res.json({ success: true, data: { items, ...totals } });
   } catch (err) {
     next(err);
@@ -106,7 +109,8 @@ export async function removeCartItem(req, res, next) {
     await item.destroy();
 
     const items = await populateCartItems(await getCartItems(cart.id));
-    const totals = calcCartTotals(items, env.deliveryCharge);
+    const deliverySettings = await getDeliverySettings();
+    const totals = calcCartTotals(items, deliverySettings);
     res.json({ success: true, data: { items, ...totals } });
   } catch (err) {
     next(err);

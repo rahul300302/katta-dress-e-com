@@ -1,5 +1,6 @@
 import { Order } from '../models/index.js';
 import env from '../config/env.js';
+import { getDeliverySettings } from '../services/deliverySettings.js';
 import { AppError } from '../middleware/errorHandler.js';
 import {
   createRazorpayOrder,
@@ -76,18 +77,24 @@ export async function verifyRazorpayPayment(req, res, next) {
   }
 }
 
-export function getPaymentConfig(_req, res) {
-  let keyId = '';
+export async function getPaymentConfig(_req, res, next) {
   try {
-    keyId = getRazorpayKeyId();
-  } catch {
-    keyId = env.razorpay.keyId || '';
+    let keyId = '';
+    try {
+      keyId = getRazorpayKeyId();
+    } catch {
+      keyId = env.razorpay.keyId || '';
+    }
+    const delivery = await getDeliverySettings();
+    res.json({
+      success: true,
+      data: {
+        keyId,
+        deliveryCharge: delivery.charge,
+        freeDeliveryMinOrder: delivery.freeDeliveryMinOrder,
+      },
+    });
+  } catch (err) {
+    next(err);
   }
-  res.json({
-    success: true,
-    data: {
-      keyId,
-      deliveryCharge: env.deliveryCharge,
-    },
-  });
 }

@@ -1,5 +1,5 @@
 import { Order, OrderItem, Cart, CartItem, Product, User } from '../models/index.js';
-import env from '../config/env.js';
+import { getDeliverySettings } from '../services/deliverySettings.js';
 import { AppError } from '../middleware/errorHandler.js';
 import {
   populateCartItems,
@@ -50,9 +50,10 @@ export async function createOrderFromCart(req, res, next) {
 
     await validateCartStock(cartItems);
     const items = await populateCartItems(cartItems);
+    const deliverySettings = await getDeliverySettings();
     const { subtotal, discount, deliveryCharge, totalAmount } = calcCartTotals(
       items,
-      env.deliveryCharge
+      deliverySettings
     );
 
     const order = await Order.create({

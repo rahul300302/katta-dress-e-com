@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Package, ShoppingCart, Users, IndianRupee, Plus, Eye, Pencil } from 'lucide-react';
 import HeroSlideEditor from '@/components/admin/HeroSlideEditor';
 import AnnouncementEditor from '@/components/admin/AnnouncementEditor';
+import DeliverySettingsEditor from '@/components/admin/DeliverySettingsEditor';
 import api, { type Product, type Order, type AppUser } from '@/services/api';
 import { formatPrice } from '@/lib/constants';
 import BrandLogo from '@/components/BrandLogo';
@@ -356,6 +357,7 @@ export default function AdminPage() {
         <div className="space-y-8">
           <BrandingEditor />
           <AnnouncementEditor />
+          <DeliverySettingsEditor />
           <HeroSlideEditor />
         </div>
       )}
