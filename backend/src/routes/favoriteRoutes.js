@@ -12,7 +12,7 @@ const router = Router();
 // Get all user favorites
 router.get('/', authenticate, getUserFavorites);
 
-// Check which products are favorited
+// Check which products are favorited 
 router.post('/check', authenticate, checkFavorites);
 
 // Toggle favorite (add/remove)
