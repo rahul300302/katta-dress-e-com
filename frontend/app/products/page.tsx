@@ -61,6 +61,37 @@ const EMPTY_FILTERS: ProductFiltersState = {
   isBestSeller: '',
 };
 
+const CACHE_KEY_PREFIX = 'katta-products-cache-v1';
+const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+
+function loadProductCache(key: string) {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(`${CACHE_KEY_PREFIX}:${key}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp > CACHE_TTL) {
+      localStorage.removeItem(`${CACHE_KEY_PREFIX}:${key}`);
+      return null;
+    }
+    return parsed.products as Product[];
+  } catch {
+    return null;
+  }
+}
+
+function saveProductCache(key: string, products: Product[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(
+      `${CACHE_KEY_PREFIX}:${key}`,
+      JSON.stringify({ timestamp: Date.now(), products })
+    );
+  } catch {
+    // Ignore write failures
+  }
+}
+
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -106,11 +137,22 @@ function ProductsContent() {
   }
 
   useEffect(() => {
-    setLoading(true);
     const params = filtersToParams(filters);
+    const cacheKey = params.toString() || 'all';
+    const cached = loadProductCache(cacheKey);
+    if (cached) {
+      setProducts(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     api
       .get(`/products?${params}`)
-      .then((res) => setProducts(res.data.data.products))
+      .then((res) => {
+        setProducts(res.data.data.products);
+        saveProductCache(cacheKey, res.data.data.products);
+      })
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, [filters]);

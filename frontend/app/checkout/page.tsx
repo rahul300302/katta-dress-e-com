@@ -80,17 +80,24 @@ export default function CheckoutPage() {
         order_id: payData.razorpayOrderId,
         prefill: payData.prefill,
         handler: async (response) => {
-          const verifyRes = await api.post('/payments/razorpay/verify', {
-            orderId: order._id,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature,
-          });
-          const finalized = verifyRes.data.data;
-          useCartStore.getState().clear();
-          router.push(
-            `/order/success?id=${finalized._id}&paymentId=${response.razorpay_payment_id}`
-          );
+          try {
+            const verifyRes = await api.post('/payments/razorpay/verify', {
+              orderId: order._id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            const finalized = verifyRes.data.data;
+            useCartStore.getState().clear();
+            router.push(
+              `/order/success?id=${finalized._id}&paymentId=${response.razorpay_payment_id}`
+            );
+          } catch (handlerError: unknown) {
+            const msg = (handlerError as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            alert(msg || 'Payment succeeded but verification failed. Please contact support.');
+          } finally {
+            setLoading(false);
+          }
         },
         modal: {
           ondismiss: () => setLoading(false),

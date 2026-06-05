@@ -181,5 +181,36 @@ export async function syncDatabase() {
     END $$;
   `);
 
+  await sequelize.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes WHERE tablename = 'products' AND indexname = 'idx_products_sizes'
+      ) THEN
+        CREATE INDEX idx_products_sizes ON products USING GIN ("sizes");
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes WHERE tablename = 'products' AND indexname = 'idx_products_colors'
+      ) THEN
+        CREATE INDEX idx_products_colors ON products USING GIN ("colors");
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes WHERE tablename = 'products' AND indexname = 'idx_products_stock'
+      ) THEN
+        CREATE INDEX idx_products_stock ON products ("stock");
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes WHERE tablename = 'products' AND indexname = 'idx_products_offerprice'
+      ) THEN
+        CREATE INDEX idx_products_offerprice ON products ("offerPrice");
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes WHERE tablename = 'products' AND indexname = 'idx_products_isoffer'
+      ) THEN
+        CREATE INDEX idx_products_isoffer ON products ("isOffer");
+      END IF;
+    END $$;
+  `);
+
   console.log('Database tables synced');
 }

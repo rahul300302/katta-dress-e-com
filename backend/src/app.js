@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -16,10 +17,11 @@ if (process.env.VERCEL === '1') {
   app.set('trust proxy', 1);
 }
 
+app.use(compression());
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 const allowedOrigins = [
-  'https://katta-dress-frontend.vercel.app',
+  'https://katta-dress-frontend.vercel.app','https://www.joinkatta.in',
   ...(env.frontendUrl || 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim())

@@ -28,6 +28,43 @@ function buildWhere(query) {
       { collection: { [Op.iLike]: `%${query.q}%` } },
     ];
   }
+  if (query.size) {
+    where.sizes = { [Op.contains]: [query.size] };
+  }
+  if (query.color) {
+    where.colors = { [Op.contains]: [query.color] };
+  }
+  if (query.inStock === 'true') {
+    where.stock = { [Op.gt]: 0 };
+  }
+
+  const priceConditions = [];
+  if (query.minPrice) {
+    const min = Number(query.minPrice);
+    if (!Number.isNaN(min)) {
+      priceConditions.push(
+        sequelize.where(
+          sequelize.literal('COALESCE("offerPrice", "price")'),
+          { [Op.gte]: min }
+        )
+      );
+    }
+  }
+  if (query.maxPrice) {
+    const max = Number(query.maxPrice);
+    if (!Number.isNaN(max)) {
+      priceConditions.push(
+        sequelize.where(
+          sequelize.literal('COALESCE("offerPrice", "price")'),
+          { [Op.lte]: max }
+        )
+      );
+    }
+  }
+  if (priceConditions.length) {
+    where[Op.and] = [...(where[Op.and] || []), ...priceConditions];
+  }
+
   return where;
 }
 
@@ -119,58 +156,21 @@ export async function listProducts(req, res, next) {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(48, Math.max(1, Number(req.query.limit) || 12));
     const where = buildWhere(req.query);
-    // Optimize common case: when no size/color/min/max filters are present,
-    // delegate pagination and filtering to the DB to avoid loading entire table.
-    let total = 0;
-    let pageRows = [];
+    const offset = (page - 1) * limit;
 
-    const hasComplexFilter = req.query.size || req.query.color || req.query.minPrice || req.query.maxPrice || req.query.inStock;
+    const { count, rows } = await Product.findAndCountAll({
+      where,
+      order: buildOrder(req.query.sort),
+      limit,
+      offset,
+    });
 
-    if (!hasComplexFilter) {
-      const offset = (page - 1) * limit;
-      const { count, rows } = await Product.findAndCountAll({
-        where,
-        order: buildOrder(req.query.sort),
-        limit,
-        offset,
-      });
-      total = Number(count || 0);
-      pageRows = (rows || []).map(numericFields);
-    } else {
-      // Fallback: apply complex filters in-memory while still avoiding accidental huge responses
-      // by limiting the maximum items fetched.
-      const MAX_FETCH = 2000;
-      let products = await Product.findAll({ where, order: buildOrder(req.query.sort), limit: MAX_FETCH });
-
-      if (req.query.size) {
-        const size = req.query.size;
-        products = products.filter((p) => productOffersSize(p, size));
-        if (req.query.inStock === 'true') {
-          products = products.filter((p) => stockForSize(p, size) > 0);
-        }
-      }
-      if (req.query.color) {
-        products = products.filter((p) => (p.colors || []).includes(req.query.color));
-      }
-      if (req.query.minPrice) {
-        const min = Number(req.query.minPrice);
-        products = products.filter((p) => getEffective(p) >= min);
-      }
-      if (req.query.maxPrice) {
-        const max = Number(req.query.maxPrice);
-        products = products.filter((p) => getEffective(p) <= max);
-      }
-
-      total = products.length;
-      const start = (page - 1) * limit;
-      pageRows = products.slice(start, start + limit).map(numericFields);
-    }
-
+    res.set('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=60');
     res.json({
       success: true,
       data: {
-        products: pageRows,
-        pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+        products: (rows || []).map(numericFields),
+        pagination: { page, limit, total: Number(count || 0), pages: Math.ceil(Number(count || 0) / limit) || 1 },
       },
     });
   } catch (err) {
@@ -188,6 +188,7 @@ export async function getProduct(req, res, next) {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) throw new AppError('Product not found', 404);
+    res.set('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=60');
     res.json({ success: true, data: numericFields(product) });
   } catch (err) {
     next(err);
@@ -263,6 +264,7 @@ export async function getHomeSections(_req, res, next) {
       Product.findAll({ where: { isBestSeller: true }, order: [['createdAt', 'DESC']], limit: 8 }),
       Product.findAll({ order: [['createdAt', 'DESC']], limit: 12 }),
     ]);
+    res.set('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=60');
     res.json({
       success: true,
       data: {

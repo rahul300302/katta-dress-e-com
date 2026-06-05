@@ -118,6 +118,9 @@ export function formatOrder(order, items = []) {
   o.discount = Number(o.discount);
   o.deliveryCharge = Number(o.deliveryCharge);
   o.totalAmount = Number(o.totalAmount);
+  o.invoiceNumber = `KATTA-${String(o._id).padStart(6, '0')}`;
+  o.invoiceDate = o.createdAt ? new Date(o.createdAt).toISOString() : new Date().toISOString();
+  o.invoiceStatus = o.paymentStatus === 'paid' ? 'Paid' : 'Pending';
   o.price = undefined;
   return o;
 }

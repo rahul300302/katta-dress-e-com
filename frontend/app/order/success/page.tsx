@@ -49,6 +49,8 @@ function SuccessContent() {
 
         <div className="mt-8 rounded-2xl bg-store-faint p-6 text-left text-sm">
           <p><strong>Order ID:</strong> {orderId}</p>
+          <p className="mt-1"><strong>Invoice No.:</strong> {order?.invoiceNumber || `KATTA-${String(orderId).padStart(6, '0')}`}</p>
+          <p className="mt-1"><strong>Invoice Date:</strong> {order?.invoiceDate ? new Date(order.invoiceDate).toLocaleString() : '—'}</p>
           <p className="mt-1"><strong>Payment ID:</strong> {paymentId || order?.razorpayPaymentId}</p>
           {order && (
             <p className="mt-1"><strong>Total:</strong> {formatPrice(order.totalAmount)}</p>

@@ -98,18 +98,23 @@ export async function finalizePaidOrder(orderId, razorpayOrderId, razorpayPaymen
   });
 
   const items = await OrderItem.findAll({ where: { orderId: order.id } });
-  for (const item of items) {
-    const product = await Product.findByPk(item.productId);
-    if (product) {
+  const productIds = [...new Set(items.map((item) => item.productId))];
+  const products = await Product.findAll({ where: { id: productIds } });
+  const productById = new Map(products.map((product) => [product.id, product]));
+
+  await Promise.all(
+    items.map(async (item) => {
+      const product = productById.get(item.productId);
+      if (!product) return;
       const stockUpdate = decrementSizeStock(product, item.size, item.quantity);
-      await product.update(stockUpdate);
-    }
-  }
+      return product.update(stockUpdate);
+    })
+  );
 
   const cart = await Cart.findOne({ where: { userId: order.userId } });
   if (cart) await CartItem.destroy({ where: { cartId: cart.id } });
 
-  await sendOrderConfirmedEmails(order);
+  void sendOrderConfirmedEmails(order);
 
   return orderWithItems(order);
 }
